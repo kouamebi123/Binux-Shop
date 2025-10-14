@@ -6,10 +6,14 @@ cmds = ['composer install --no-dev --optimize-autoloader']
 
 [phases.build]
 cmds = [
-  'php bin/console cache:clear --env=prod',
+  'php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || true',
+  'php bin/console cache:clear --env=prod --no-warmup',
   'php bin/console cache:warmup --env=prod'
 ]
 
 [start]
-cmd = 'php -S 0.0.0.0:$PORT -t public'
+cmd = 'cd public && php -S 0.0.0.0:$PORT'
+
+[variables]
+DOCUMENT_ROOT = 'public'
 

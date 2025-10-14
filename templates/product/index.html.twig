@@ -1,0 +1,90 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tous les produits - Binux Shop{% endblock %}
+
+{% block body %}
+<div class="bg-light py-5">
+    <div class="container">
+        <h1 class="fw-bold">Tous nos produits</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li class="breadcrumb-item active">Produits</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-4">Catégories</h5>
+                    <div class="list-group list-group-flush">
+                        {% for category in categories %}
+                        <a href="{{ path('app_product_category', {slug: category.slug}) }}" 
+                           class="list-group-item list-group-item-action">
+                            {{ category.name }}
+                            <span class="badge bg-primary rounded-pill float-end">{{ category.products|length }}</span>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Products Grid -->
+        <div class="col-lg-9">
+            {% if products|length > 0 %}
+                <div class="mb-4">
+                    <p class="text-muted">{{ products|length }} produits trouvés</p>
+                </div>
+                
+                <div class="row g-4">
+                    {% for product in products %}
+                    <div class="col-md-6 col-lg-4">
+                        <div class="card h-100">
+                            {% if product.hasDiscount %}
+                                <span class="badge bg-danger product-badge">-{{ product.discountPercentage }}%</span>
+                            {% endif %}
+                            {% if not product.isInStock %}
+                                <span class="badge bg-secondary product-badge">Rupture de stock</span>
+                            {% endif %}
+                            <img src="{{ product.imageUrl ?: 'https://via.placeholder.com/300x250?text=' ~ product.name }}" 
+                                 class="card-img-top" alt="{{ product.name }}">
+                            <div class="card-body d-flex flex-column">
+                                <h5 class="card-title">{{ product.name }}</h5>
+                                <p class="text-muted small">{{ product.category.name }}</p>
+                                <p class="card-text text-muted small flex-grow-1">
+                                    {{ product.description|length > 100 ? product.description|slice(0, 100) ~ '...' : product.description }}
+                                </p>
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+                                    <div>
+                                        <span class="h5 mb-0 text-primary">{{ product.price }} €</span>
+                                        {% if product.oldPrice %}
+                                            <small class="text-muted text-decoration-line-through d-block">{{ product.oldPrice }} €</small>
+                                        {% endif %}
+                                    </div>
+                                    <a href="{{ path('app_product_show', {slug: product.slug}) }}" class="btn btn-sm btn-primary">
+                                        Voir <i class="bi bi-arrow-right"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                    <h4 class="mt-3">Aucun produit trouvé</h4>
+                    <p class="text-muted">Essayez une autre recherche ou catégorie</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

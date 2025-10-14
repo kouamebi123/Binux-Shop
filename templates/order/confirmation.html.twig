@@ -1,0 +1,90 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Commande confirmée - Binux Shop{% endblock %}
+
+{% block body %}
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="text-center mb-5">
+                <div class="mb-4">
+                    <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
+                </div>
+                <h1 class="fw-bold mb-3">Commande confirmée !</h1>
+                <p class="lead text-muted">Merci pour votre commande. Nous préparons votre colis avec soin.</p>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-4">Détails de la commande</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Numéro de commande</p>
+                            <p class="fw-bold">{{ order.orderNumber }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Date</p>
+                            <p class="fw-bold">{{ order.createdAt|date('d/m/Y à H:i') }}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Statut</p>
+                            <span class="badge bg-warning">{{ order.statusLabel }}</span>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted mb-1">Total</p>
+                            <p class="h4 mb-0 text-primary">{{ order.total }} €</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-4">Articles commandés</h5>
+                    
+                    {% for item in order.items %}
+                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
+                        <div>
+                            <h6 class="mb-1">{{ item.productName }}</h6>
+                            <p class="text-muted small mb-0">Quantité : {{ item.quantity }}</p>
+                        </div>
+                        <div class="text-end">
+                            <p class="mb-0 fw-bold">{{ item.total }} €</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">Adresse de livraison</h5>
+                    <p class="mb-0">{{ order.shippingAddress|nl2br }}</p>
+                </div>
+            </div>
+
+            <div class="alert alert-warning mb-4">
+                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Paiement requis</h5>
+                <p class="mb-3">Votre commande a été créée mais nécessite un paiement pour être validée.</p>
+                <a href="{{ path('app_payment_checkout', {orderNumber: order.orderNumber}) }}" class="btn btn-success btn-lg w-100">
+                    <i class="bi bi-credit-card"></i> Payer maintenant avec Stripe
+                </a>
+            </div>
+
+            <div class="text-center">
+                <a href="{{ path('app_order_list') }}" class="btn btn-outline-primary me-2">
+                    <i class="bi bi-list"></i> Mes commandes
+                </a>
+                <a href="{{ path('app_home') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-house"></i> Retour à l'accueil
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

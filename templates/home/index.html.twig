@@ -1,0 +1,151 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Accueil - Binux Shop{% endblock %}
+
+{% block body %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container text-center">
+        <h1 class="display-3 fw-bold mb-4">Bienvenue sur Binux Shop</h1>
+        <p class="lead mb-5">Découvrez nos produits de qualité à des prix imbattables</p>
+        <a href="{{ path('app_product_index') }}" class="btn btn-light btn-lg rounded-pill px-5">
+            <i class="bi bi-bag"></i> Parcourir les produits
+        </a>
+    </div>
+</div>
+
+<!-- Featured Products -->
+{% if featured_products|length > 0 %}
+<section class="container my-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Produits en vedette</h2>
+        <p class="text-muted">Découvrez notre sélection exclusive</p>
+    </div>
+    
+    <div class="row g-4">
+        {% for product in featured_products %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                {% if product.hasDiscount %}
+                    <span class="badge bg-danger product-badge">-{{ product.discountPercentage }}%</span>
+                {% endif %}
+                <img src="{{ product.imageUrl ?: 'https://via.placeholder.com/300x250?text=' ~ product.name }}" 
+                     class="card-img-top" alt="{{ product.name }}">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text text-muted small flex-grow-1">
+                        {{ product.description|length > 80 ? product.description|slice(0, 80) ~ '...' : product.description }}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <span class="h5 mb-0 text-primary">{{ product.price }} €</span>
+                            {% if product.oldPrice %}
+                                <small class="text-muted text-decoration-line-through d-block">{{ product.oldPrice }} €</small>
+                            {% endif %}
+                        </div>
+                        <a href="{{ path('app_product_show', {slug: product.slug}) }}" class="btn btn-sm btn-outline-primary">
+                            Voir <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Categories -->
+{% if categories|length > 0 %}
+<section class="container my-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Nos catégories</h2>
+        <p class="text-muted">Explorez nos différentes catégories de produits</p>
+    </div>
+    
+    <div class="row g-4">
+        {% for category in categories %}
+        <div class="col-md-6 col-lg-4">
+            <a href="{{ path('app_product_category', {slug: category.slug}) }}" class="text-decoration-none">
+                <div class="category-card" style="background-image: url('{{ category.imageUrl ?: 'https://via.placeholder.com/400x200?text=' ~ category.name }}')">
+                    <div class="category-card-content">
+                        <h3 class="fw-bold">{{ category.name }}</h3>
+                        <p class="mb-0">{{ category.products|length }} produits</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Latest Products -->
+{% if latest_products|length > 0 %}
+<section class="container my-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold">Nouveautés</h2>
+        <p class="text-muted">Nos derniers produits ajoutés</p>
+    </div>
+    
+    <div class="row g-4">
+        {% for product in latest_products %}
+        <div class="col-md-6 col-lg-3">
+            <div class="card h-100">
+                {% if product.hasDiscount %}
+                    <span class="badge bg-danger product-badge">-{{ product.discountPercentage }}%</span>
+                {% endif %}
+                <img src="{{ product.imageUrl ?: 'https://via.placeholder.com/300x250?text=' ~ product.name }}" 
+                     class="card-img-top" alt="{{ product.name }}">
+                <div class="card-body d-flex flex-column">
+                    <h5 class="card-title">{{ product.name }}</h5>
+                    <p class="card-text text-muted small flex-grow-1">
+                        {{ product.description|length > 80 ? product.description|slice(0, 80) ~ '...' : product.description }}
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <div>
+                            <span class="h5 mb-0 text-primary">{{ product.price }} €</span>
+                            {% if product.oldPrice %}
+                                <small class="text-muted text-decoration-line-through d-block">{{ product.oldPrice }} €</small>
+                            {% endif %}
+                        </div>
+                        <a href="{{ path('app_product_show', {slug: product.slug}) }}" class="btn btn-sm btn-outline-primary">
+                            Voir <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- Features -->
+<section class="container my-5 py-5">
+    <div class="row g-4">
+        <div class="col-md-4 text-center">
+            <div class="mb-3">
+                <i class="bi bi-truck" style="font-size: 3rem; color: var(--primary-color);"></i>
+            </div>
+            <h5 class="fw-bold">Livraison gratuite</h5>
+            <p class="text-muted">Pour toute commande supérieure à 50€</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="mb-3">
+                <i class="bi bi-shield-check" style="font-size: 3rem; color: var(--primary-color);"></i>
+            </div>
+            <h5 class="fw-bold">Paiement sécurisé</h5>
+            <p class="text-muted">Vos transactions sont 100% sécurisées</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <div class="mb-3">
+                <i class="bi bi-headset" style="font-size: 3rem; color: var(--primary-color);"></i>
+            </div>
+            <h5 class="fw-bold">Support 24/7</h5>
+            <p class="text-muted">Notre équipe est là pour vous aider</p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

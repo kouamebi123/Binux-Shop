@@ -1,0 +1,96 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des produits - Admin{% endblock %}
+
+{% block body %}
+<div class="bg-dark text-white py-4">
+    <div class="container">
+        <h1 class="fw-bold"><i class="bi bi-box-seam"></i> Gestion des produits</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-transparent text-white-50 mb-0">
+                <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}" class="text-white-50">Admin</a></li>
+                <li class="breadcrumb-item active text-white">Produits</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="mb-4">
+        <a href="{{ path('app_admin_product_add') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Ajouter un produit
+        </a>
+    </div>
+
+    {% if products|length > 0 %}
+    <div class="card">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Image</th>
+                            <th>Nom</th>
+                            <th>Catégorie</th>
+                            <th>Prix</th>
+                            <th>Stock</th>
+                            <th>Statut</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for product in products %}
+                        <tr>
+                            <td>{{ product.id }}</td>
+                            <td>
+                                <img src="{{ product.imageUrl ?: 'https://via.placeholder.com/50' }}" 
+                                     alt="{{ product.name }}" 
+                                     style="width: 50px; height: 50px; object-fit: cover;" 
+                                     class="rounded">
+                            </td>
+                            <td>{{ product.name }}</td>
+                            <td>{{ product.category.name }}</td>
+                            <td>{{ product.price }} €</td>
+                            <td>
+                                {% if product.stock > 10 %}
+                                    <span class="badge bg-success">{{ product.stock }}</span>
+                                {% elseif product.stock > 0 %}
+                                    <span class="badge bg-warning">{{ product.stock }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ product.stock }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if product.isIsActive %}
+                                    <span class="badge bg-success">Actif</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactif</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ path('app_admin_product_edit', {id: product.id}) }}" class="btn btn-outline-primary">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    <form method="post" action="{{ path('app_admin_product_delete', {id: product.id}) }}" class="d-inline">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_product_' ~ product.id) }}">
+                                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Êtes-vous sûr ?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">Aucun produit trouvé</div>
+    {% endif %}
+</div>
+{% endblock %}
+

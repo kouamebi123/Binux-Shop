@@ -1,0 +1,59 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Gestion des catégories - Admin{% endblock %}
+
+{% block body %}
+<div class="bg-dark text-white py-4">
+    <div class="container">
+        <h1 class="fw-bold"><i class="bi bi-tags"></i> Gestion des catégories</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb bg-transparent text-white-50 mb-0">
+                <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}" class="text-white-50">Admin</a></li>
+                <li class="breadcrumb-item active text-white">Catégories</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="mb-4">
+        <a href="{{ path('app_admin_category_add') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> Ajouter une catégorie
+        </a>
+    </div>
+
+    {% if categories|length > 0 %}
+    <div class="row g-4">
+        {% for category in categories %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold">{{ category.name }}</h5>
+                    <p class="card-text text-muted small">
+                        {{ category.description|length > 100 ? category.description|slice(0, 100) ~ '...' : category.description }}
+                    </p>
+                    <p class="mb-3">
+                        <span class="badge bg-primary">{{ category.products|length }} produits</span>
+                    </p>
+                    <div class="d-flex gap-2">
+                        <a href="{{ path('app_admin_category_edit', {id: category.id}) }}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-pencil"></i> Modifier
+                        </a>
+                        <form method="post" action="{{ path('app_admin_category_delete', {id: category.id}) }}" class="d-inline">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete_category_' ~ category.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Êtes-vous sûr ?')">
+                                <i class="bi bi-trash"></i> Supprimer
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info">Aucune catégorie trouvée</div>
+    {% endif %}
+</div>
+{% endblock %}
+

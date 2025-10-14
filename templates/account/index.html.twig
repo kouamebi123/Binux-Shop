@@ -1,0 +1,76 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mon compte - Binux Shop{% endblock %}
+
+{% block body %}
+<div class="bg-light py-5">
+    <div class="container">
+        <h1 class="fw-bold">Mon compte</h1>
+        <p class="lead">Bienvenue {{ app.user.firstName }} {{ app.user.lastName }}</p>
+    </div>
+</div>
+
+<div class="container my-5">
+    <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+            <a href="{{ path('app_account_profile') }}" class="text-decoration-none">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i>
+                        <h5 class="card-title mt-3 fw-bold">Mon profil</h5>
+                        <p class="card-text text-muted">Gérer mes informations personnelles</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a href="{{ path('app_order_list') }}" class="text-decoration-none">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="bi bi-bag text-primary" style="font-size: 4rem;"></i>
+                        <h5 class="card-title mt-3 fw-bold">Mes commandes</h5>
+                        <p class="card-text text-muted">Suivre et consulter mes commandes</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-4">
+            <a href="{{ path('app_account_addresses') }}" class="text-decoration-none">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="bi bi-geo-alt text-primary" style="font-size: 4rem;"></i>
+                        <h5 class="card-title mt-3 fw-bold">Mes adresses</h5>
+                        <p class="card-text text-muted">Gérer mes adresses de livraison</p>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">Informations personnelles</h5>
+                    <p><strong>Email :</strong> {{ app.user.email }}</p>
+                    <p><strong>Téléphone :</strong> {{ app.user.phone ?: 'Non renseigné' }}</p>
+                    <p class="mb-0"><strong>Membre depuis :</strong> {{ app.user.createdAt|date('d/m/Y') }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title fw-bold mb-3">Statistiques</h5>
+                    <p><strong>Nombre de commandes :</strong> {{ app.user.orders|length }}</p>
+                    <p class="mb-0"><strong>Adresses enregistrées :</strong> {{ app.user.addresses|length }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

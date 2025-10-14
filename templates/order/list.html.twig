@@ -1,0 +1,80 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Mes commandes - Binux Shop{% endblock %}
+
+{% block body %}
+<div class="bg-light py-5">
+    <div class="container">
+        <h1 class="fw-bold">Mes commandes</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
+                <li class="breadcrumb-item"><a href="{{ path('app_account') }}">Mon compte</a></li>
+                <li class="breadcrumb-item active">Mes commandes</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="container my-5">
+    {% if orders|length > 0 %}
+    <div class="row">
+        {% for order in orders %}
+        <div class="col-12 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-3">
+                            <p class="text-muted small mb-1">Numéro de commande</p>
+                            <p class="fw-bold mb-0">{{ order.orderNumber }}</p>
+                        </div>
+                        <div class="col-md-2">
+                            <p class="text-muted small mb-1">Date</p>
+                            <p class="mb-0">{{ order.createdAt|date('d/m/Y') }}</p>
+                        </div>
+                        <div class="col-md-2">
+                            <p class="text-muted small mb-1">Total</p>
+                            <p class="fw-bold mb-0 text-primary">{{ order.total }} €</p>
+                        </div>
+                        <div class="col-md-2">
+                            <p class="text-muted small mb-1">Statut</p>
+                            {% set statusClass = {
+                                'pending': 'warning',
+                                'processing': 'info',
+                                'shipped': 'primary',
+                                'delivered': 'success',
+                                'cancelled': 'danger'
+                            } %}
+                            <span class="badge bg-{{ statusClass[order.status] ?? 'secondary' }}">
+                                {{ order.statusLabel }}
+                            </span>
+                        </div>
+                        <div class="col-md-3 text-end">
+                            {% if order.status == 'pending' %}
+                                <a href="{{ path('app_payment_checkout', {orderNumber: order.orderNumber}) }}" class="btn btn-success btn-sm mb-1">
+                                    <i class="bi bi-credit-card"></i> Payer
+                                </a>
+                            {% endif %}
+                            <a href="{{ path('app_order_show', {id: order.id}) }}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-eye"></i> Détails
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-bag-x" style="font-size: 5rem; color: #ccc;"></i>
+        <h3 class="mt-4">Aucune commande</h3>
+        <p class="text-muted mb-4">Vous n'avez pas encore passé de commande</p>
+        <a href="{{ path('app_product_index') }}" class="btn btn-primary btn-lg">
+            <i class="bi bi-bag"></i> Découvrir nos produits
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+

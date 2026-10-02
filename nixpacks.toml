@@ -2,19 +2,10 @@
 nixPkgs = ['php82', 'php82Packages.composer']
 
 [phases.install]
-cmds = ['composer install --no-dev --optimize-autoloader']
-
-[phases.build]
-cmds = [
-  'export APP_ENV=prod',
-  'php bin/console doctrine:migrations:migrate --no-interaction --allow-no-migration || true',
-  'php bin/console cache:clear --env=prod --no-warmup',
-  'php bin/console cache:warmup --env=prod'
-]
+cmds = ['composer install --no-dev --optimize-autoloader --no-scripts']
 
 [start]
-cmd = 'cd public && php -S 0.0.0.0:$PORT'
+cmd = 'php -S 0.0.0.0:$PORT -t public'
 
 [variables]
 DOCUMENT_ROOT = 'public'
-

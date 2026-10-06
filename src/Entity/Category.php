@@ -7,7 +7,7 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\HttpFoundation\File\File;
-use Symfony\Component\String\Slugger\SluggerInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: CategoryRepository::class)]
@@ -20,18 +20,29 @@ class Category
     private ?int $id = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'Donnez un nom à la catégorie.')]
+    #[Assert\Length(min: 2, max: 100)]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, unique: true)]
     private ?string $slug = null;
 
     #[ORM\Column(type: 'text', nullable: true)]
+    #[Assert\Length(max: 1000)]
     private ?string $description = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255)]
+    #[Assert\Url(protocols: ['https'], message: 'Indiquez une adresse complète commençant par https://')]
     private ?string $image = null;
 
     #[Vich\UploadableField(mapping: 'category_images', fileNameProperty: 'imageName')]
+    #[Assert\File(
+        maxSize: '5M',
+        extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        extensionsMessage: 'Formats acceptés : JPG, PNG, WebP ou GIF.',
+        maxSizeMessage: 'L\'image dépasse 5 Mo.',
+    )]
     private ?File $imageFile = null;
 
     #[ORM\Column(length: 255, nullable: true)]

@@ -1,0 +1,40 @@
+{# Carte d'un article dans une grille. Variables : product, (facultatif) heading = niveau du titre. #}
+<article class="card-product{% if not product.inStock %} card-product--out{% endif %}">
+    <a class="card-product__media thumb" href="{{ path('app_product_show', {slug: product.slug}) }}" tabindex="-1" aria-hidden="true" data-product-link>
+        <span class="thumb__mono">{{ product.name|first|upper }}</span>
+        {% if product.imageUrl %}
+            <img src="{{ product.imageUrl }}" alt="" loading="lazy" decoding="async" width="480" height="600" data-img>
+        {% endif %}
+        {% if not product.inStock %}
+            <span class="tag tag--muted">Épuisé</span>
+        {% elseif product.hasDiscount %}
+            <span class="tag tag--sale">−{{ product.discountPercentage }}&nbsp;%</span>
+        {% endif %}
+    </a>
+    <div class="card-product__body">
+        <p class="card-product__cat">{{ product.category.name }}</p>
+        <{{ heading|default('h3') }} class="card-product__name">
+            <a href="{{ path('app_product_show', {slug: product.slug}) }}" data-product-link>{{ product.name }}</a>
+        </{{ heading|default('h3') }}>
+        <div class="card-product__foot">
+            <p class="price">
+                <span class="price__now">{{ product.price|eur }}</span>
+                {% if product.hasDiscount %}
+                    <s class="price__old"><span class="sr-only">Ancien prix&nbsp;: </span>{{ product.oldPrice|eur }}</s>
+                {% endif %}
+            </p>
+            {% if product.inStock and is_granted('IS_AUTHENTICATED_FULLY') %}
+                <form method="post" action="{{ path('app_cart_add', {id: product.id}) }}" data-cart-add>
+                    <input type="hidden" name="_token" value="{{ csrf_token('cart_add_' ~ product.id) }}">
+                    <input type="hidden" name="quantity" value="1">
+                    <button class="btn-round" type="submit" aria-label="Ajouter {{ product.name }} au panier" title="Ajouter au panier">
+                        {{ icon('plus') }}
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+        {% if product.lowStock %}
+            <p class="card-product__stock">Plus que {{ product.stock }} en stock</p>
+        {% endif %}
+    </div>
+</article>

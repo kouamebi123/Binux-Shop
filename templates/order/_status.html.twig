@@ -1,0 +1,14 @@
+{# Pastille d'état d'une commande. Variable : order. #}
+{% if order.cancelled %}
+    <span class="tag tag--bad">Annulée</span>
+{% elseif order.awaitingPayment %}
+    <span class="tag tag--warn">En attente de paiement</span>
+{% elseif order.status == 'processing' %}
+    <span class="tag tag--info">Payée, en préparation</span>
+{% elseif order.status == 'shipped' %}
+    <span class="tag tag--info">Expédiée</span>
+{% elseif order.status == 'delivered' %}
+    <span class="tag tag--ok">Livrée</span>
+{% else %}
+    <span class="tag">{{ order.statusLabel }}</span>
+{% endif %}

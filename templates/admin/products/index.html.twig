@@ -1,96 +1,64 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
-{% block title %}Gestion des produits - Admin{% endblock %}
+{% block title %}Produits · Administration{% endblock %}
+{% block admin_title %}Produits{% endblock %}
+{% block admin_intro %}<p>{{ products|length }} produit{{ products|length > 1 ? 's' }} au catalogue.</p>{% endblock %}
+{% block admin_actions %}<a href="{{ path('app_admin_product_add') }}" class="btn btn--sm">{{ icon('plus') }} Ajouter un produit</a>{% endblock %}
+{% set admin_section = 'products' %}
 
-{% block body %}
-<div class="bg-dark text-white py-4">
-    <div class="container">
-        <h1 class="fw-bold"><i class="bi bi-box-seam"></i> Gestion des produits</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-transparent text-white-50 mb-0">
-                <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}" class="text-white-50">Admin</a></li>
-                <li class="breadcrumb-item active text-white">Produits</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<div class="container my-5">
-    <div class="mb-4">
-        <a href="{{ path('app_admin_product_add') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Ajouter un produit
-        </a>
-    </div>
-
+{% block admin_body %}
+<section class="panel panel--flush">
     {% if products|length > 0 %}
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Image</th>
-                            <th>Nom</th>
-                            <th>Catégorie</th>
-                            <th>Prix</th>
-                            <th>Stock</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for product in products %}
-                        <tr>
-                            <td>{{ product.id }}</td>
-                            <td>
-                                <img src="{{ product.imageUrl ?: 'https://via.placeholder.com/50' }}" 
-                                     alt="{{ product.name }}" 
-                                     style="width: 50px; height: 50px; object-fit: cover;" 
-                                     class="rounded">
-                            </td>
-                            <td>{{ product.name }}</td>
-                            <td>{{ product.category.name }}</td>
-                            <td>{{ product.price }} €</td>
-                            <td>
-                                {% if product.stock > 10 %}
-                                    <span class="badge bg-success">{{ product.stock }}</span>
-                                {% elseif product.stock > 0 %}
-                                    <span class="badge bg-warning">{{ product.stock }}</span>
-                                {% else %}
-                                    <span class="badge bg-danger">{{ product.stock }}</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% if product.isIsActive %}
-                                    <span class="badge bg-success">Actif</span>
-                                {% else %}
-                                    <span class="badge bg-secondary">Inactif</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="btn-group btn-group-sm">
-                                    <a href="{{ path('app_admin_product_edit', {id: product.id}) }}" class="btn btn-outline-primary">
-                                        <i class="bi bi-pencil"></i>
-                                    </a>
-                                    <form method="post" action="{{ path('app_admin_product_delete', {id: product.id}) }}" class="d-inline">
-                                        <input type="hidden" name="_token" value="{{ csrf_token('delete_product_' ~ product.id) }}">
-                                        <button type="submit" class="btn btn-outline-danger" onclick="return confirm('Êtes-vous sûr ?')">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Produit</th>
+                    <th scope="col" class="num">Prix</th>
+                    <th scope="col" class="num">Stock</th>
+                    <th scope="col">État</th>
+                    <th scope="col"><span class="sr-only">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr>
+                    <td>
+                        <div class="cell-product">
+                            <span class="thumb thumb--sm">
+                                <span class="thumb__mono">{{ product.name|first|upper }}</span>
+                                {% if product.imageUrl %}<img src="{{ product.imageUrl }}" alt="" loading="lazy" data-img>{% endif %}
+                            </span>
+                            <div>
+                                <a class="line__name" href="{{ path('app_admin_product_edit', {id: product.id}) }}">{{ product.name }}</a>
+                                <p class="line__meta">{{ product.category.name }}{% if product.isFeatured %}, en vitrine{% endif %}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="num">{{ product.price|eur }}{% if product.hasDiscount %}<br><s class="muted">{{ product.oldPrice|eur }}</s>{% endif %}</td>
+                    <td class="num">{% if product.stock == 0 %}<span class="tag tag--bad">0</span>{% elseif product.lowStock %}<span class="tag tag--warn">{{ product.stock }}</span>{% else %}{{ product.stock }}{% endif %}</td>
+                    <td>{% if product.isActive %}<span class="tag tag--ok">En vente</span>{% else %}<span class="tag">Retiré</span>{% endif %}</td>
+                    <td>
+                        <div class="cell-actions">
+                            <a href="{{ path('app_admin_product_edit', {id: product.id}) }}">Modifier</a>
+                            <form method="post" action="{{ path('app_admin_product_delete', {id: product.id}) }}" data-confirm="Supprimer « {{ product.name }} » ?">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_product_' ~ product.id) }}">
+                                <button type="submit" class="link-button">Supprimer</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     {% else %}
-    <div class="alert alert-info">Aucun produit trouvé</div>
+    <div class="empty">
+        {{ icon('package') }}
+        <h2>Aucun produit</h2>
+        <p>Ajoutez le premier article du catalogue.</p>
+        <a href="{{ path('app_admin_product_add') }}" class="btn">Ajouter un produit</a>
+    </div>
     {% endif %}
-</div>
+</section>
 {% endblock %}
-

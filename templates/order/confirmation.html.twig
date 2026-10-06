@@ -1,90 +1,47 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Commande confirmée - Binux Shop{% endblock %}
+{% block title %}Commande {{ order.orderNumber }} · Binux Shop{% endblock %}
 
 {% block body %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="text-center mb-5">
-                <div class="mb-4">
-                    <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
-                </div>
-                <h1 class="fw-bold mb-3">Commande confirmée !</h1>
-                <p class="lead text-muted">Merci pour votre commande. Nous préparons votre colis avec soin.</p>
-            </div>
+<div class="wrap wrap--narrow">
+    <div class="confirm">
+        {% if order.paid %}
+            <span class="confirm__mark">{{ icon('check') }}</span>
+            <h1>Merci, votre commande est confirmée</h1>
+            <p class="lead">Le paiement de {{ order.total|eur }} est bien reçu. La commande <span class="order-number">{{ order.orderNumber }}</span> part en préparation.</p>
+        {% elseif order.cancelled %}
+            <span class="confirm__mark confirm__mark--wait">{{ icon('circle-x') }}</span>
+            <h1>Cette commande est annulée</h1>
+            <p class="lead">La commande <span class="order-number">{{ order.orderNumber }}</span> n'a pas été payée. Rien n'a été débité.</p>
+        {% else %}
+            <span class="confirm__mark confirm__mark--wait">{{ icon('clock') }}</span>
+            <h1>Votre commande attend son paiement</h1>
+            <p class="lead">La commande <span class="order-number">{{ order.orderNumber }}</span> est enregistrée et vos articles sont réservés pendant deux heures.</p>
+        {% endif %}
+    </div>
 
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-4">Détails de la commande</h5>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1">Numéro de commande</p>
-                            <p class="fw-bold">{{ order.orderNumber }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1">Date</p>
-                            <p class="fw-bold">{{ order.createdAt|date('d/m/Y à H:i') }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1">Statut</p>
-                            <span class="badge bg-warning">{{ order.statusLabel }}</span>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1">Total</p>
-                            <p class="h4 mb-0 text-primary">{{ order.total }} €</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="section">
+        <section class="panel" aria-labelledby="contenu-commande">
+            <h2 id="contenu-commande">Contenu de la commande</h2>
+            {{ include('order/_summary.html.twig') }}
+            <dl class="totals totals--after-lines">
+                <div><dt>Livraison</dt><dd>Offerte</dd></div>
+                <div class="totals__grand"><dt>Total</dt><dd>{{ order.total|eur }}</dd></div>
+            </dl>
+            {% if order.awaitingPayment %}
+                {{ include('order/_pay.html.twig') }}
+            {% endif %}
+        </section>
 
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-4">Articles commandés</h5>
-                    
-                    {% for item in order.items %}
-                    <div class="d-flex justify-content-between align-items-center mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
-                        <div>
-                            <h6 class="mb-1">{{ item.productName }}</h6>
-                            <p class="text-muted small mb-0">Quantité : {{ item.quantity }}</p>
-                        </div>
-                        <div class="text-end">
-                            <p class="mb-0 fw-bold">{{ item.total }} €</p>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
+        <section class="panel" aria-labelledby="livraison-commande">
+            <h2 id="livraison-commande">Livraison</h2>
+            <p>{{ order.shippingAddress }}</p>
+        </section>
 
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-3">Adresse de livraison</h5>
-                    <p class="mb-0">{{ order.shippingAddress|nl2br }}</p>
-                </div>
-            </div>
-
-            <div class="alert alert-warning mb-4">
-                <h5 class="alert-heading"><i class="bi bi-exclamation-triangle"></i> Paiement requis</h5>
-                <p class="mb-3">Votre commande a été créée mais nécessite un paiement pour être validée.</p>
-                <a href="{{ path('app_payment_checkout', {orderNumber: order.orderNumber}) }}" class="btn btn-success btn-lg w-100">
-                    <i class="bi bi-credit-card"></i> Payer maintenant avec Stripe
-                </a>
-            </div>
-
-            <div class="text-center">
-                <a href="{{ path('app_order_list') }}" class="btn btn-outline-primary me-2">
-                    <i class="bi bi-list"></i> Mes commandes
-                </a>
-                <a href="{{ path('app_home') }}" class="btn btn-outline-secondary">
-                    <i class="bi bi-house"></i> Retour à l'accueil
-                </a>
-            </div>
+        <div class="form-actions">
+            <a href="{{ path('app_order_show', {id: order.id}) }}" class="btn btn--quiet">Suivre cette commande</a>
+            <a href="{{ path('app_product_index') }}" class="btn btn--quiet">Continuer mes achats</a>
         </div>
     </div>
 </div>
 {% endblock %}
-

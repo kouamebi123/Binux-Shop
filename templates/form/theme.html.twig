@@ -1,0 +1,78 @@
+{% use 'form_div_layout.html.twig' %}
+
+{# Une ligne de formulaire : libellé, champ, aide courte, erreurs. #}
+{% block form_row -%}
+    {%- set widget_attr = {} -%}
+    {%- if help is not empty -%}
+        {%- set widget_attr = {attr: {'aria-describedby': id ~ '_help'}} -%}
+    {%- endif -%}
+    <div{% with {attr: row_attr|merge({class: (row_attr.class|default('') ~ ' field' ~ (errors|length ? ' field--invalid' : ''))|trim})} %}{{ block('attributes') }}{% endwith %}>
+        {{- form_label(form) -}}
+        {{- form_widget(form, widget_attr) -}}
+        {{- form_help(form) -}}
+        {{- form_errors(form) -}}
+    </div>
+{%- endblock form_row %}
+
+{% block checkbox_row -%}
+    <div{% with {attr: row_attr|merge({class: (row_attr.class|default('') ~ ' field field--check')|trim})} %}{{ block('attributes') }}{% endwith %}>
+        <label class="check" for="{{ id }}">
+            {{- form_widget(form) -}}
+            <span>{{ label is same as(false) ? '' : (label ?? name|humanize) }}</span>
+        </label>
+        {{- form_help(form) -}}
+        {{- form_errors(form) -}}
+    </div>
+{%- endblock checkbox_row %}
+
+{% block form_label -%}
+    {%- if label is not same as(false) -%}
+        {%- set label_attr = label_attr|merge({class: (label_attr.class|default('') ~ ' field__label')|trim}) -%}
+        {%- if not compound -%}
+            {%- set label_attr = label_attr|merge({for: id}) -%}
+        {%- endif -%}
+        <{{ compound ? 'p' : 'label' }}{% with {attr: label_attr} %}{{ block('attributes') }}{% endwith %}>
+            {{- label ?? name|humanize -}}
+            {%- if not required and not compound and '(optionnel)' not in (label ?? '') %} <span class="field__optional">facultatif</span>{% endif -%}
+        </{{ compound ? 'p' : 'label' }}>
+    {%- endif -%}
+{%- endblock form_label %}
+
+{% block form_help -%}
+    {%- if help is not empty -%}
+        <p id="{{ id }}_help" class="field__help">{{ help }}</p>
+    {%- endif -%}
+{%- endblock form_help %}
+
+{% block form_errors -%}
+    {%- if errors|length > 0 -%}
+        <ul class="field__errors{% if form.parent is empty %} field__errors--global{% endif %}" role="alert">
+            {%- for error in errors -%}
+                <li>{{ error.message }}</li>
+            {%- endfor -%}
+        </ul>
+    {%- endif -%}
+{%- endblock form_errors %}
+
+{# Champ monétaire : le symbole € reste à côté du champ, sans mise en forme en ligne. #}
+{% block money_widget -%}
+    <span class="input-money">
+        {{- block('form_widget_simple') -}}
+        <span class="input-money__unit" aria-hidden="true">€</span>
+    </span>
+{%- endblock money_widget %}
+
+{# Envoi d'image (VichUploader) : aperçu de l'image actuelle, puis le champ fichier. #}
+{% block vich_image_widget -%}
+    <div class="upload">
+        {%- if image_uri -%}
+            <img class="upload__preview" src="{{ asset_helper is same as(true) ? asset(image_uri) : image_uri }}" alt="Image actuelle" width="96" height="96">
+        {%- endif -%}
+        <div class="upload__fields">
+            {{- form_widget(form.file, {attr: {class: 'form-control', accept: 'image/jpeg,image/png,image/webp,image/gif'}}) -}}
+            {%- if form.delete is defined -%}
+                {{- form_row(form.delete) -}}
+            {%- endif -%}
+        </div>
+    </div>
+{%- endblock vich_image_widget %}

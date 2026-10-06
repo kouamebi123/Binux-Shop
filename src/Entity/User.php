@@ -9,6 +9,7 @@ use Doctrine\ORM\Mapping as ORM;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: UserRepository::class)]
 #[ORM\Table(name: '`user`')]
@@ -21,6 +22,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?int $id = null;
 
     #[ORM\Column(length: 180, unique: true)]
+    #[Assert\NotBlank(message: 'Indiquez votre adresse e-mail.')]
+    #[Assert\Email(message: 'Cette adresse e-mail n\'est pas valide.')]
+    #[Assert\Length(max: 180)]
     private ?string $email = null;
 
     #[ORM\Column]
@@ -30,12 +34,17 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     private ?string $password = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'Indiquez votre prénom.')]
+    #[Assert\Length(max: 100)]
     private ?string $firstName = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'Indiquez votre nom.')]
+    #[Assert\Length(max: 100)]
     private ?string $lastName = null;
 
     #[ORM\Column(length: 20, nullable: true)]
+    #[Assert\Regex(pattern: '/^\+?[0-9 .()-]{6,20}$/', message: 'Ce numéro de téléphone n\'est pas reconnu.')]
     private ?string $phone = null;
 
     #[ORM\Column]
@@ -106,7 +115,7 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
         return $this;
     }
 
-    public function eraseCredentials()
+    public function eraseCredentials(): void
     {
         // If you store any temporary, sensitive data on the user, clear it here
     }

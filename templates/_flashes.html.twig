@@ -1,0 +1,15 @@
+{% set flashes = app.flashes %}
+{% if flashes|length %}
+    <div class="wrap flashes" aria-live="polite">
+        {% for label, messages in flashes %}
+            {% set kind = label in ['success', 'error', 'warning'] ? label : 'info' %}
+            {% for message in messages %}
+                <div class="flash flash--{{ kind }}" role="{{ kind == 'error' ? 'alert' : 'status' }}" data-flash>
+                    {{ icon(kind == 'success' ? 'circle-check' : (kind == 'error' ? 'circle-x' : (kind == 'warning' ? 'triangle-alert' : 'info'))) }}
+                    <p>{{ message }}</p>
+                    <button type="button" class="flash__close" aria-label="Fermer ce message" data-flash-close>{{ icon('x', 'icon--sm') }}</button>
+                </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+{% endif %}

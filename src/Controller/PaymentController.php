@@ -2,122 +2,127 @@
 
 namespace App\Controller;
 
-use App\Entity\Order;
-use App\Repository\OrderRepository;
-use App\Repository\PaymentRepository;
-use App\Service\StripeService;
+use App\Entity\User;
+use App\Exception\ShopException;
+use App\Payment\PaymentException;
+use App\Payment\PaymentGateway;
+use App\Service\OrderService;
+use App\Service\PaymentService;
+use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
-use Symfony\Component\Security\Http\Attribute\IsGranted;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
-#[Route('/paiement')]
-#[IsGranted('ROLE_USER')]
 class PaymentController extends AbstractController
 {
-    private StripeService $stripeService;
-    private OrderRepository $orderRepository;
-    private PaymentRepository $paymentRepository;
-
     public function __construct(
-        StripeService $stripeService,
-        OrderRepository $orderRepository,
-        PaymentRepository $paymentRepository
+        private readonly PaymentService $paymentService,
+        private readonly OrderService $orderService,
     ) {
-        $this->stripeService = $stripeService;
-        $this->orderRepository = $orderRepository;
-        $this->paymentRepository = $paymentRepository;
     }
 
-    #[Route('/commande/{orderNumber}', name: 'app_payment_checkout')]
-    public function checkout(string $orderNumber): Response
+    /**
+     * Ouvre le paiement d'une commande. En POST uniquement : afficher une page ne crée rien chez Stripe.
+     */
+    #[Route('/paiement/commande/{orderNumber}', name: 'app_payment_checkout', methods: ['GET', 'POST'])]
+    public function checkout(string $orderNumber, Request $request): Response
     {
-        $user = $this->getUser();
-        $orders = $this->orderRepository->findByUser($user);
-
-        $order = null;
-        foreach ($orders as $o) {
-            if ($o->getOrderNumber() === $orderNumber) {
-                $order = $o;
-                break;
-            }
-        }
+        $order = $this->orderService->findUserOrder($this->user(), $orderNumber);
 
         if (!$order) {
             throw $this->createNotFoundException('Commande non trouvée');
         }
 
-        // Vérifier si la commande n'est pas déjà payée
-        $payment = $this->paymentRepository->findOneBy(['orderRef' => $order]);
-        if ($payment && $payment->isPaid()) {
-            $this->addFlash('info', 'Cette commande a déjà été payée');
-            return $this->redirectToRoute('app_order_show', ['id' => $order->getId()]);
+        $orderPage = $this->redirectToRoute('app_order_show', ['id' => $order->getId()]);
+
+        if (!$request->isMethod('POST')) {
+            return $orderPage;
+        }
+
+        if (!$this->isCsrfTokenValid('pay_' . $order->getOrderNumber(), (string) $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException('Jeton de sécurité invalide');
         }
 
         try {
-            $successUrl = $this->generateUrl('app_payment_success', [], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL) . '?session_id={CHECKOUT_SESSION_ID}';
-            $cancelUrl = $this->generateUrl('app_payment_cancel', ['orderNumber' => $orderNumber], \Symfony\Component\Routing\Generator\UrlGeneratorInterface::ABSOLUTE_URL);
-
-            $session = $this->stripeService->createCheckoutSession($order, $successUrl, $cancelUrl);
-
-            return $this->render('payment/checkout.html.twig', [
-                'order' => $order,
-                'stripe_public_key' => $this->stripeService->getPublicKey(),
-                'checkout_session_id' => $session->id,
-            ]);
-        } catch (\Exception $e) {
+            return $this->redirect($this->paymentService->startCheckout(
+                $order,
+                $this->generateUrl('app_payment_success', [], UrlGeneratorInterface::ABSOLUTE_URL) . '?session_id={CHECKOUT_SESSION_ID}',
+                $this->generateUrl('app_payment_cancel', ['orderNumber' => $orderNumber], UrlGeneratorInterface::ABSOLUTE_URL),
+            ), Response::HTTP_SEE_OTHER);
+        } catch (ShopException $e) {
             $this->addFlash('error', $e->getMessage());
-            return $this->redirectToRoute('app_order_show', ['id' => $order->getId()]);
+
+            return $orderPage;
         }
     }
 
-    #[Route('/succes', name: 'app_payment_success')]
+    #[Route('/paiement/succes', name: 'app_payment_success', methods: ['GET'])]
     public function success(Request $request): Response
     {
-        $sessionId = $request->query->get('session_id');
+        $payment = $this->paymentService->confirmFromSessionId((string) $request->query->get('session_id', ''));
 
-        if (!$sessionId) {
-            return $this->redirectToRoute('app_home');
+        // Une session ne confirme que la commande de la personne connectée.
+        if (!$payment || $payment->getOrderRef()->getUser() !== $this->user()) {
+            $this->addFlash('warning', 'Le paiement n\'est pas encore confirmé. S\'il a bien été validé, votre commande sera mise à jour sous peu.');
+
+            return $this->redirectToRoute('app_order_list');
+        }
+
+        $this->addFlash('success', 'Paiement reçu. Votre commande est confirmée.');
+
+        return $this->redirectToRoute('app_order_confirmation', [
+            'orderNumber' => $payment->getOrderRef()->getOrderNumber(),
+        ]);
+    }
+
+    #[Route('/paiement/annule/{orderNumber}', name: 'app_payment_cancel', methods: ['GET'])]
+    public function cancel(string $orderNumber): Response
+    {
+        $order = $this->orderService->findUserOrder($this->user(), $orderNumber);
+
+        if (!$order) {
+            return $this->redirectToRoute('app_order_list');
+        }
+
+        $this->addFlash('warning', 'Le paiement n\'a pas été effectué. Votre commande est conservée, vous pouvez la régler quand vous voulez.');
+
+        return $this->redirectToRoute('app_order_show', ['id' => $order->getId()]);
+    }
+
+    /**
+     * Notification envoyée par Stripe quand un paiement aboutit, même si le client a fermé son navigateur.
+     * Seules les notifications dont la signature est valide sont prises en compte.
+     */
+    #[Route('/stripe/webhook', name: 'app_stripe_webhook', methods: ['POST'])]
+    public function webhook(Request $request, PaymentGateway $gateway, LoggerInterface $logger): Response
+    {
+        if (!$gateway->canVerifyWebhooks()) {
+            throw $this->createNotFoundException();
         }
 
         try {
-            $payment = $this->stripeService->handlePaymentSuccess($sessionId);
-            
-            if ($payment) {
-                $this->addFlash('success', 'Paiement effectué avec succès ! Votre commande est confirmée.');
-                return $this->redirectToRoute('app_order_confirmation', [
-                    'orderNumber' => $payment->getOrderRef()->getOrderNumber()
-                ]);
-            }
-        } catch (\Exception $e) {
-            $this->addFlash('error', 'Erreur lors de la vérification du paiement');
+            $session = $gateway->parseWebhook($request->getContent(), (string) $request->headers->get('Stripe-Signature'));
+        } catch (PaymentException $e) {
+            $logger->warning('Notification de paiement rejetée.', ['error' => $e->getMessage()]);
+
+            return new Response('signature invalide', Response::HTTP_BAD_REQUEST);
         }
 
-        return $this->redirectToRoute('app_order_list');
+        if ($session) {
+            $this->paymentService->confirm($session);
+        }
+
+        return new Response('ok');
     }
 
-    #[Route('/annule/{orderNumber}', name: 'app_payment_cancel')]
-    public function cancel(string $orderNumber): Response
+    private function user(): User
     {
-        $this->addFlash('warning', 'Le paiement a été annulé. Vous pouvez réessayer quand vous le souhaitez.');
-        
+        $this->denyAccessUnlessGranted('ROLE_USER');
         $user = $this->getUser();
-        $orders = $this->orderRepository->findByUser($user);
+        \assert($user instanceof User);
 
-        $order = null;
-        foreach ($orders as $o) {
-            if ($o->getOrderNumber() === $orderNumber) {
-                $order = $o;
-                break;
-            }
-        }
-
-        if ($order) {
-            return $this->redirectToRoute('app_order_show', ['id' => $order->getId()]);
-        }
-
-        return $this->redirectToRoute('app_order_list');
+        return $user;
     }
 }
-

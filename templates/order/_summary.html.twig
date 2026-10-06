@@ -1,0 +1,16 @@
+{# Récapitulatif chiffré d'une commande. Variable : order. #}
+<ul class="lines">
+    {% for item in order.items %}
+    <li class="line">
+        <span class="thumb thumb--sm">
+            <span class="thumb__mono">{{ item.productName|first|upper }}</span>
+            {% if item.product.imageUrl %}<img src="{{ item.product.imageUrl }}" alt="" loading="lazy" data-img>{% endif %}
+        </span>
+        <div>
+            <p class="line__name">{{ item.productName }}</p>
+            <p class="line__meta">{{ item.quantity }} × {{ item.price|eur }}</p>
+        </div>
+        <p class="line__total">{{ item.total|eur }}</p>
+    </li>
+    {% endfor %}
+</ul>

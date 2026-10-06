@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\CartItemRepository;
 use Doctrine\DBAL\Types\Types;
+use App\Util\Money;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CartItemRepository::class)]
@@ -89,9 +90,14 @@ class CartItem
         return $this;
     }
 
-    public function getTotal(): float
+    public function getTotalCents(): int
     {
-        return (float)$this->price * $this->quantity;
+        return Money::toCents($this->price) * (int) $this->quantity;
+    }
+
+    public function getTotal(): string
+    {
+        return Money::toDecimal($this->getTotalCents());
     }
 
     public function getCreatedAt(): ?\DateTimeImmutable

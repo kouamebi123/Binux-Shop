@@ -1,61 +1,22 @@
-{% extends 'base.html.twig' %}
+{% extends 'account/_layout.html.twig' %}
 
-{% block title %}Mon profil - Binux Shop{% endblock %}
+{% block title %}Mon profil · Binux Shop{% endblock %}
+{% block account_title %}Mon profil{% endblock %}
+{% set account_section = 'profile' %}
 
-{% block body %}
-<div class="bg-light py-5">
-    <div class="container">
-        <h1 class="fw-bold">Mon profil</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('app_account') }}">Mon compte</a></li>
-                <li class="breadcrumb-item active">Profil</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-body p-4">
-                    <h5 class="card-title fw-bold mb-4">Informations personnelles</h5>
-                    
-                    {{ form_start(form) }}
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form_row(form.firstName) }}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            {{ form_row(form.lastName) }}
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_row(form.email) }}
-                    </div>
-
-                    <div class="mb-4">
-                        {{ form_row(form.phone) }}
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ path('app_account') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Retour
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Enregistrer
-                        </button>
-                    </div>
-
-                    {{ form_end(form) }}
-                </div>
-            </div>
+{% block account_body %}
+    <section class="panel">
+        {{ form_start(form) }}
+        {{ form_errors(form) }}
+        <div class="form-grid">
+            {{ form_row(form.firstName, {attr: {autocomplete: 'given-name'}}) }}
+            {{ form_row(form.lastName, {attr: {autocomplete: 'family-name'}}) }}
+            {{ form_row(form.email, {row_attr: {class: 'field--wide'}, attr: {autocomplete: 'email'}, help: 'C\'est aussi votre identifiant de connexion.'}) }}
+            {{ form_row(form.phone, {row_attr: {class: 'field--wide'}, attr: {autocomplete: 'tel'}}) }}
         </div>
-    </div>
-</div>
+        <div class="form-actions">
+            <button type="submit" class="btn">Enregistrer</button>
+        </div>
+        {{ form_end(form) }}
+    </section>
 {% endblock %}
-

@@ -5,6 +5,7 @@ namespace App\Entity;
 use App\Repository\CartRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use App\Util\Money;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CartRepository::class)]
@@ -93,15 +94,20 @@ class Cart
         return $this;
     }
 
-    public function getTotal(): float
+    public function getTotalCents(): int
     {
         $total = 0;
 
         foreach ($this->cartItems as $item) {
-            $total += $item->getTotal();
+            $total += $item->getTotalCents();
         }
 
         return $total;
+    }
+
+    public function getTotal(): string
+    {
+        return Money::toDecimal($this->getTotalCents());
     }
 
     public function getTotalItems(): int

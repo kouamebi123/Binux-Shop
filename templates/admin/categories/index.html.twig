@@ -1,59 +1,56 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
-{% block title %}Gestion des catégories - Admin{% endblock %}
+{% block title %}Catégories · Administration{% endblock %}
+{% block admin_title %}Catégories{% endblock %}
+{% block admin_intro %}<p>Les rayons de la boutique.</p>{% endblock %}
+{% block admin_actions %}<a href="{{ path('app_admin_category_add') }}" class="btn btn--sm">{{ icon('plus') }} Ajouter une catégorie</a>{% endblock %}
+{% set admin_section = 'categories' %}
 
-{% block body %}
-<div class="bg-dark text-white py-4">
-    <div class="container">
-        <h1 class="fw-bold"><i class="bi bi-tags"></i> Gestion des catégories</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-transparent text-white-50 mb-0">
-                <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}" class="text-white-50">Admin</a></li>
-                <li class="breadcrumb-item active text-white">Catégories</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<div class="container my-5">
-    <div class="mb-4">
-        <a href="{{ path('app_admin_category_add') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> Ajouter une catégorie
-        </a>
-    </div>
-
+{% block admin_body %}
+<section class="panel panel--flush">
     {% if categories|length > 0 %}
-    <div class="row g-4">
-        {% for category in categories %}
-        <div class="col-md-6 col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold">{{ category.name }}</h5>
-                    <p class="card-text text-muted small">
-                        {{ category.description|length > 100 ? category.description|slice(0, 100) ~ '...' : category.description }}
-                    </p>
-                    <p class="mb-3">
-                        <span class="badge bg-primary">{{ category.products|length }} produits</span>
-                    </p>
-                    <div class="d-flex gap-2">
-                        <a href="{{ path('app_admin_category_edit', {id: category.id}) }}" class="btn btn-sm btn-outline-primary">
-                            <i class="bi bi-pencil"></i> Modifier
-                        </a>
-                        <form method="post" action="{{ path('app_admin_category_delete', {id: category.id}) }}" class="d-inline">
-                            <input type="hidden" name="_token" value="{{ csrf_token('delete_category_' ~ category.id) }}">
-                            <button type="submit" class="btn btn-sm btn-outline-danger" onclick="return confirm('Êtes-vous sûr ?')">
-                                <i class="bi bi-trash"></i> Supprimer
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr><th scope="col">Catégorie</th><th scope="col" class="num">Produits</th><th scope="col"><span class="sr-only">Actions</span></th></tr>
+            </thead>
+            <tbody>
+                {% for category in categories %}
+                <tr>
+                    <td>
+                        <div class="cell-product">
+                            <span class="thumb thumb--sm">
+                                <span class="thumb__mono">{{ category.name|first|upper }}</span>
+                                {% if category.imageUrl %}<img src="{{ category.imageUrl }}" alt="" loading="lazy" data-img>{% endif %}
+                            </span>
+                            <div>
+                                <a class="line__name" href="{{ path('app_admin_category_edit', {id: category.id}) }}">{{ category.name }}</a>
+                                <p class="line__meta">{{ category.description }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="num">{{ category.products|length }}</td>
+                    <td>
+                        <div class="cell-actions">
+                            <a href="{{ path('app_admin_category_edit', {id: category.id}) }}">Modifier</a>
+                            <form method="post" action="{{ path('app_admin_category_delete', {id: category.id}) }}" data-confirm="Supprimer la catégorie « {{ category.name }} » ?">
+                                <input type="hidden" name="_token" value="{{ csrf_token('delete_category_' ~ category.id) }}">
+                                <button type="submit" class="link-button">Supprimer</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     {% else %}
-    <div class="alert alert-info">Aucune catégorie trouvée</div>
+    <div class="empty">
+        {{ icon('tags') }}
+        <h2>Aucune catégorie</h2>
+        <p>Créez un premier rayon avant d'ajouter des produits.</p>
+        <a href="{{ path('app_admin_category_add') }}" class="btn">Ajouter une catégorie</a>
+    </div>
     {% endif %}
-</div>
+</section>
 {% endblock %}
-

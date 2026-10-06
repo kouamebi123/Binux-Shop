@@ -1,70 +1,14 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Recherche - Binux Shop{% endblock %}
+{% block title %}{{ query ? 'Recherche : ' ~ query : 'Recherche' }} · Binux Shop{% endblock %}
 
 {% block body %}
-<div class="bg-light py-5">
-    <div class="container">
-        <h1 class="fw-bold">Résultats de recherche</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                <li class="breadcrumb-item active">Recherche</li>
-            </ol>
-        </nav>
-    </div>
+<div class="wrap">
+    <header class="page-head">
+        <h1>{% if query %}Résultats pour «&nbsp;{{ query }}&nbsp;»{% else %}Rechercher un article{% endif %}</h1>
+        {% if not query %}<p>Saisissez un nom d'article ou de rayon dans la barre de recherche.</p>{% endif %}
+    </header>
+    {{ include('product/_listing.html.twig', {route: 'app_product_search', route_params: {}}) }}
 </div>
-
-<div class="container my-5">
-    {% if query %}
-        <h4 class="mb-4">Recherche pour : "{{ query }}"</h4>
-        
-        {% if products|length > 0 %}
-            <p class="text-muted mb-4">{{ products|length }} résultat(s) trouvé(s)</p>
-            
-            <div class="row g-4">
-                {% for product in products %}
-                <div class="col-md-6 col-lg-3">
-                    <div class="card h-100">
-                        {% if product.hasDiscount %}
-                            <span class="badge bg-danger product-badge">-{{ product.discountPercentage }}%</span>
-                        {% endif %}
-                        <img src="{{ product.imageUrl ?: 'https://via.placeholder.com/300x250?text=' ~ product.name }}" 
-                             class="card-img-top" alt="{{ product.name }}">
-                        <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">{{ product.name }}</h5>
-                            <p class="text-muted small">{{ product.category.name }}</p>
-                            <p class="card-text text-muted small flex-grow-1">
-                                {{ product.description|length > 80 ? product.description|slice(0, 80) ~ '...' : product.description }}
-                            </p>
-                            <div class="d-flex justify-content-between align-items-center mt-3">
-                                <div>
-                                    <span class="h5 mb-0 text-primary">{{ product.price }} €</span>
-                                </div>
-                                <a href="{{ path('app_product_show', {slug: product.slug}) }}" class="btn btn-sm btn-primary">
-                                    Voir
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-        {% else %}
-            <div class="text-center py-5">
-                <i class="bi bi-search" style="font-size: 4rem; color: #ccc;"></i>
-                <h4 class="mt-3">Aucun résultat trouvé</h4>
-                <p class="text-muted">Essayez avec d'autres mots-clés</p>
-                <a href="{{ path('app_product_index') }}" class="btn btn-primary mt-3">Voir tous les produits</a>
-            </div>
-        {% endif %}
-    {% else %}
-        <div class="text-center py-5">
-            <i class="bi bi-search" style="font-size: 4rem; color: #ccc;"></i>
-            <h4 class="mt-3">Rechercher des produits</h4>
-            <p class="text-muted">Entrez vos mots-clés dans la barre de recherche</p>
-        </div>
-    {% endif %}
-</div>
+<div class="section"></div>
 {% endblock %}
-

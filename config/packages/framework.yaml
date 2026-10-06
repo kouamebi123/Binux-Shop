@@ -1,21 +1,52 @@
 # see https://symfony.com/doc/current/reference/configuration/framework.html
 framework:
     secret: '%env(APP_SECRET)%'
-    #csrf_protection: true
+    csrf_protection: true
     http_method_override: false
+    handle_all_throwables: true
 
-    # Enables session support. Note that the session will ONLY be started if you read or write from it.
-    # Remove or comment this section to explicitly disable session support.
+    # L'application tourne derrière le proxy de Railway : c'est lui qui connaît le vrai
+    # protocole (https) et l'adresse du visiteur. Sans cela, les cookies ne seraient pas
+    # marqués « secure » et la limitation des tentatives porterait sur l'adresse du proxy.
+    trusted_proxies: '%env(TRUSTED_PROXIES)%'
+    trusted_headers: ['x-forwarded-for', 'x-forwarded-host', 'x-forwarded-proto', 'x-forwarded-port']
+
     session:
         handler_id: null
+        name: BXSESSID
         cookie_secure: auto
+        cookie_httponly: true
         cookie_samesite: lax
+        gc_maxlifetime: 86400
         storage_factory_id: session.storage.factory.native
 
-    #esi: true
-    #fragments: true
+    assets:
+        version: '%app.asset_version%'
+
     php_errors:
         log: true
+
+    rate_limiter:
+        # Création de comptes : 5 par heure et par adresse.
+        registration:
+            policy: fixed_window
+            limit: 5
+            interval: '1 hour'
+        # Page d'installation de l'administrateur : 5 essais par quart d'heure.
+        setup:
+            policy: fixed_window
+            limit: 5
+            interval: '15 minutes'
+        # Suggestions de recherche.
+        search:
+            policy: sliding_window
+            limit: 60
+            interval: '1 minute'
+
+when@prod:
+    framework:
+        session:
+            cookie_secure: true
 
 when@test:
     framework:

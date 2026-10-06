@@ -6,6 +6,7 @@ use App\Repository\OrderRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
+use App\Util\Money;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: OrderRepository::class)]
@@ -58,7 +59,7 @@ class Order
     {
         $this->orderItems = new ArrayCollection();
         $this->createdAt = new \DateTimeImmutable();
-        $this->orderNumber = 'ORD-' . strtoupper(uniqid());
+        $this->orderNumber = self::generateNumber();
     }
 
     public function getId(): ?int
@@ -190,6 +191,43 @@ class Order
         $this->updatedAt = $updatedAt;
 
         return $this;
+    }
+
+    /**
+     * Numéro lisible et non devinable : BX- suivi de 10 caractères sans ambiguïté (ni 0/O, ni 1/I).
+     */
+    public static function generateNumber(): string
+    {
+        $alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+        $number = '';
+        for ($i = 0; $i < 10; ++$i) {
+            $number .= $alphabet[random_int(0, 31)];
+        }
+
+        return 'BX-' . $number;
+    }
+
+    public function getTotalCents(): int
+    {
+        return Money::toCents($this->total);
+    }
+
+    public function isPending(): bool
+    {
+        return self::STATUS_PENDING === $this->status;
+    }
+
+    public function isCancelled(): bool
+    {
+        return self::STATUS_CANCELLED === $this->status;
+    }
+
+    /**
+     * Une commande en attente et non payée peut encore être réglée ou annulée par le client.
+     */
+    public function isAwaitingPayment(): bool
+    {
+        return $this->isPending() && !$this->isPaid();
     }
 
     public static function getAvailableStatuses(): array

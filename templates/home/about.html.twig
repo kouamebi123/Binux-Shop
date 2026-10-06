@@ -1,0 +1,48 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Cette boutique · Binux Shop{% endblock %}
+
+{% block body %}
+<div class="wrap">
+    <header class="page-head">
+        <h1>Cette boutique</h1>
+        <p>Ce qu'est Binux Shop, ce qui s'y passe vraiment, et ce que deviennent vos informations.</p>
+    </header>
+
+    <div class="prose">
+        <h2>Une démonstration grandeur nature</h2>
+        <p>
+            Binux Shop est une boutique en ligne complète réalisée par <a href="{{ shop.brandUrl }}" rel="noopener">BinuxLabs</a>
+            pour montrer ce qu'un site marchand sur mesure sait faire&nbsp;: catalogue, recherche, panier, commande,
+            paiement par carte, suivi et administration.
+        </p>
+        {% if shop.demo %}
+        <p>
+            <strong>Rien n'y est réellement vendu.</strong> Les articles sont fictifs, aucune commande n'est expédiée
+            et le paiement fonctionne en mode test&nbsp;: aucune carte n'est débitée. Pour essayer le parcours jusqu'au bout,
+            utilisez la carte de test 4242&nbsp;4242&nbsp;4242&nbsp;4242 avec une date future et un cryptogramme quelconque.
+        </p>
+        {% endif %}
+        <p>Les marques et produits cités dans le catalogue appartiennent à leurs propriétaires et ne servent ici que d'exemples.</p>
+
+        <h2 id="donnees">Vos données</h2>
+        <ul>
+            <li><strong>Ce qui est enregistré&nbsp;:</strong> votre nom, votre adresse e-mail, votre téléphone si vous l'indiquez, vos adresses de livraison et vos commandes.</li>
+            <li><strong>Votre mot de passe</strong> n'est jamais conservé en clair&nbsp;: seule une empreinte chiffrée est stockée.</li>
+            <li><strong>Votre carte bancaire</strong> est saisie chez Stripe. La boutique ne reçoit ni son numéro ni son cryptogramme.</li>
+            <li><strong>Un seul cookie</strong> est déposé, celui qui maintient votre session. Aucun traceur publicitaire, aucune mesure d'audience tierce.</li>
+            <li><strong>Vos informations ne sont ni vendues ni partagées.</strong></li>
+        </ul>
+        <p>
+            Vous pouvez corriger vos informations depuis votre compte. Pour faire supprimer votre compte et vos données,
+            écrivez à BinuxLabs depuis <a href="{{ shop.brandUrl }}/contact" rel="noopener">la page de contact</a>.
+        </p>
+
+        <h2>Qui est derrière</h2>
+        <p>
+            Le site est conçu, développé et hébergé par BinuxLabs. Pour un projet de boutique ou d'application,
+            <a href="{{ shop.brandUrl }}" rel="noopener">rendez-vous sur binuxlabs.com</a>.
+        </p>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,6 @@
+services:
+    # En test, aucun appel à Stripe : la passerelle de paiement est simulée.
+    App\Tests\Support\FakeGateway:
+        public: true
+
+    App\Payment\PaymentGateway: '@App\Tests\Support\FakeGateway'

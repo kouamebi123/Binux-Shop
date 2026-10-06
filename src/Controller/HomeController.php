@@ -10,18 +10,20 @@ use Symfony\Component\Routing\Annotation\Route;
 
 class HomeController extends AbstractController
 {
-    #[Route('/', name: 'app_home')]
+    #[Route('/', name: 'app_home', methods: ['GET'])]
     public function index(ProductRepository $productRepository, CategoryRepository $categoryRepository): Response
     {
-        $featuredProducts = $productRepository->findFeaturedProducts(8);
-        $latestProducts = $productRepository->findLatestProducts(12);
-        $categories = $categoryRepository->findAllOrdered();
-
         return $this->render('home/index.html.twig', [
-            'featured_products' => $featuredProducts,
-            'latest_products' => $latestProducts,
-            'categories' => $categories,
+            'featured_products' => $productRepository->findFeaturedProducts(8),
+            'latest_products' => $productRepository->findLatestProducts(8),
+            'categories' => $categoryRepository->findWithActiveCounts(),
+            'product_count' => $productRepository->countActive(),
         ]);
     }
-}
 
+    #[Route('/a-propos', name: 'app_about', methods: ['GET'])]
+    public function about(): Response
+    {
+        return $this->render('home/about.html.twig');
+    }
+}

@@ -1,146 +1,52 @@
-{% extends 'base.html.twig' %}
+{% extends 'account/_layout.html.twig' %}
 
-{% block title %}Commande {{ order.orderNumber }} - Binux Shop{% endblock %}
+{% block title %}Commande {{ order.orderNumber }} · Binux Shop{% endblock %}
+{% block account_title %}Commande <span class="order-number">{{ order.orderNumber }}</span>{% endblock %}
+{% set account_section = 'orders' %}
 
-{% block body %}
-<div class="bg-light py-5">
-    <div class="container">
-        <h1 class="fw-bold">Détails de la commande</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('app_account') }}">Mon compte</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('app_order_list') }}">Mes commandes</a></li>
-                <li class="breadcrumb-item active">{{ order.orderNumber }}</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<div class="container my-5">
-    <div class="row">
-        <div class="col-lg-8 mb-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-4">Informations de la commande</h5>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1">Numéro de commande</p>
-                            <p class="fw-bold">{{ order.orderNumber }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1">Date de commande</p>
-                            <p class="fw-bold">{{ order.createdAt|date('d/m/Y à H:i') }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p class="text-muted mb-1">Statut</p>
-                            {% set statusClass = {
-                                'pending': 'warning',
-                                'processing': 'info',
-                                'shipped': 'primary',
-                                'delivered': 'success',
-                                'cancelled': 'danger'
-                            } %}
-                            <span class="badge bg-{{ statusClass[order.status] ?? 'secondary' }} fs-6">
-                                {{ order.statusLabel }}
-                            </span>
-                        </div>
-                        <div class="col-md-6">
-                            {% if order.updatedAt %}
-                            <p class="text-muted mb-1">Dernière mise à jour</p>
-                            <p>{{ order.updatedAt|date('d/m/Y à H:i') }}</p>
-                            {% endif %}
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-4">Articles commandés</h5>
-                    
-                    {% for item in order.items %}
-                    <div class="row align-items-center mb-3 pb-3 {% if not loop.last %}border-bottom{% endif %}">
-                        <div class="col-md-6">
-                            <h6 class="mb-1">{{ item.productName }}</h6>
-                            <p class="text-muted small mb-0">Prix unitaire : {{ item.price }} €</p>
-                        </div>
-                        <div class="col-md-3">
-                            <p class="mb-0">Quantité : {{ item.quantity }}</p>
-                        </div>
-                        <div class="col-md-3 text-end">
-                            <p class="mb-0 fw-bold text-primary">{{ item.total }} €</p>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-3">Adresse de livraison</h5>
-                    <p class="mb-0">{{ order.shippingAddress|nl2br }}</p>
-                </div>
-            </div>
-
-            {% if order.notes %}
-            <div class="card mt-4">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-3">Notes</h5>
-                    <p class="mb-0">{{ order.notes }}</p>
-                </div>
-            </div>
+{% block account_body %}
+    <div class="stack">
+        <section class="panel" aria-labelledby="suivi">
+            <h2 id="suivi">Suivi</h2>
+            {% if order.cancelled %}
+                <p class="note note--warn">{{ icon('circle-x') }}<span>Cette commande est annulée. Ses articles ont été remis en vente.</span></p>
+            {% else %}
+                {% set reached = {pending: 1, processing: 2, shipped: 3, delivered: 4}[order.status] ?? 1 %}
+                <ol class="track">
+                    <li class="is-done{{ reached == 1 ? ' is-last' }}">Commande passée <small>{{ order.createdAt|date('d/m/Y à H:i') }}</small></li>
+                    <li class="{{ reached >= 2 ? 'is-done' }}{{ reached == 2 ? ' is-last' }}">Paiement reçu {% if order.payment and order.payment.paidAt %}<small>{{ order.payment.paidAt|date('d/m/Y à H:i') }}</small>{% endif %}</li>
+                    <li class="{{ reached >= 3 ? 'is-done' }}{{ reached == 3 ? ' is-last' }}">Expédiée</li>
+                    <li class="{{ reached >= 4 ? 'is-done' }}">Livrée</li>
+                </ol>
             {% endif %}
-        </div>
+        </section>
 
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-4">Récapitulatif</h5>
-                    
-                    {% for item in order.items %}
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="small">{{ item.productName }} x {{ item.quantity }}</span>
-                        <span class="small fw-bold">{{ item.total }} €</span>
-                    </div>
-                    {% endfor %}
-                    
-                    <hr>
-                    
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Sous-total</span>
-                        <span class="fw-bold">{{ order.total }} €</span>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-3">
-                        <span>Livraison</span>
-                        <span class="text-success fw-bold">Gratuite</span>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="d-flex justify-content-between mb-4">
-                        <span class="h5 mb-0">Total</span>
-                        <span class="h5 mb-0 text-primary">{{ order.total }} €</span>
-                    </div>
-                    
-                    {% if order.status == 'pending' %}
-                    <a href="{{ path('app_payment_checkout', {orderNumber: order.orderNumber}) }}" class="btn btn-success w-100 btn-lg mb-3">
-                        <i class="bi bi-credit-card"></i> Payer avec Stripe
-                    </a>
-                    {% endif %}
-                    
-                    <a href="{{ path('app_order_list') }}" class="btn btn-outline-secondary w-100">
-                        <i class="bi bi-arrow-left"></i> Retour à mes commandes
-                    </a>
-                </div>
-            </div>
-        </div>
+        <section class="panel" aria-labelledby="articles">
+            <h2 id="articles">Articles commandés</h2>
+            {{ include('order/_summary.html.twig') }}
+            <dl class="totals totals--after-lines">
+                <div><dt>Sous-total</dt><dd>{{ order.total|eur }}</dd></div>
+                <div><dt>Livraison</dt><dd>Offerte</dd></div>
+                <div class="totals__grand"><dt>Total</dt><dd>{{ order.total|eur }}</dd></div>
+            </dl>
+
+            {% if order.awaitingPayment %}
+                {{ include('order/_pay.html.twig') }}
+                <form method="post" action="{{ path('app_order_cancel', {id: order.id}) }}" data-confirm="Annuler cette commande ?">
+                    <input type="hidden" name="_token" value="{{ csrf_token('order_cancel_' ~ order.id) }}">
+                    <p class="fine"><button type="submit" class="link-button">Annuler cette commande</button></p>
+                </form>
+            {% endif %}
+        </section>
+
+        <section class="panel" aria-labelledby="livraison">
+            <h2 id="livraison">Livraison</h2>
+            <dl class="kv">
+                <div><dt>Adresse</dt><dd>{{ order.shippingAddress }}</dd></div>
+                {% if order.notes %}<div><dt>Notes</dt><dd>{{ order.notes }}</dd></div>{% endif %}
+            </dl>
+        </section>
+
+        <p><a href="{{ path('app_order_list') }}">Retour à mes commandes</a></p>
     </div>
-</div>
 {% endblock %}
-

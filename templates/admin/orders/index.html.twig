@@ -1,82 +1,50 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
-{% block title %}Gestion des commandes - Admin{% endblock %}
+{% block title %}Commandes · Administration{% endblock %}
+{% block admin_title %}Commandes{% endblock %}
+{% block admin_intro %}<p>{{ orders|length }} commande{{ orders|length > 1 ? 's' }}{{ current_status ? ' dans cet état' }}.</p>{% endblock %}
+{% set admin_section = 'orders' %}
 
-{% block body %}
-<div class="bg-dark text-white py-4">
-    <div class="container">
-        <h1 class="fw-bold"><i class="bi bi-bag"></i> Gestion des commandes</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-transparent text-white-50 mb-0">
-                <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}" class="text-white-50">Admin</a></li>
-                <li class="breadcrumb-item active text-white">Commandes</li>
-            </ol>
-        </nav>
-    </div>
-</div>
+{% block admin_body %}
+<nav class="chips chips--bar" aria-label="Filtrer par état">
+    <a class="chip" href="{{ path('app_admin_orders') }}" {{ current_status is null ? 'aria-current="page"' }}>Toutes</a>
+    {% for key, label in available_statuses %}
+        <a class="chip" href="{{ path('app_admin_orders', {statut: key}) }}" {{ current_status == key ? 'aria-current="page"' }}>{{ label }}</a>
+    {% endfor %}
+</nav>
 
-<div class="container my-5">
+<section class="panel panel--flush">
     {% if orders|length > 0 %}
-    <div class="card">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Numéro</th>
-                            <th>Client</th>
-                            <th>Date</th>
-                            <th>Total</th>
-                            <th>Paiement</th>
-                            <th>Statut</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for order in orders %}
-                        <tr>
-                            <td>{{ order.orderNumber }}</td>
-                            <td>{{ order.user.fullName }}</td>
-                            <td>{{ order.createdAt|date('d/m/Y H:i') }}</td>
-                            <td>{{ order.total }} €</td>
-                            <td>
-                                {% if order.isPaid %}
-                                    <span class="badge bg-success">
-                                        <i class="bi bi-check-circle"></i> Payée
-                                    </span>
-                                {% else %}
-                                    <span class="badge bg-danger">
-                                        <i class="bi bi-x-circle"></i> Non payée
-                                    </span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                {% set statusClass = {
-                                    'pending': 'warning',
-                                    'processing': 'info',
-                                    'shipped': 'primary',
-                                    'delivered': 'success',
-                                    'cancelled': 'danger'
-                                } %}
-                                <span class="badge bg-{{ statusClass[order.status] ?? 'secondary' }}">
-                                    {{ order.statusLabel }}
-                                </span>
-                            </td>
-                            <td>
-                                <a href="{{ path('app_admin_order_show', {id: order.id}) }}" class="btn btn-sm btn-outline-primary">
-                                    <i class="bi bi-eye"></i> Voir
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+    <div class="table-wrap">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">Commande</th>
+                    <th scope="col">Client</th>
+                    <th scope="col">État</th>
+                    <th scope="col">Paiement</th>
+                    <th scope="col" class="num">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+                    <td><a class="order-number" href="{{ path('app_admin_order_show', {id: order.id}) }}">{{ order.orderNumber }}</a><br><span class="muted">{{ order.createdAt|date('d/m/Y H:i') }}</span></td>
+                    <td>{{ order.user.fullName }}<br><span class="muted">{{ order.user.email }}</span></td>
+                    <td>{{ include('order/_status.html.twig') }}</td>
+                    <td>{% if order.paid %}<span class="tag tag--ok">Payée</span>{% else %}<span class="tag">Non payée</span>{% endif %}</td>
+                    <td class="num">{{ order.total|eur }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
     {% else %}
-    <div class="alert alert-info">Aucune commande trouvée</div>
+    <div class="empty">
+        {{ icon('clipboard-list') }}
+        <h2>Aucune commande{{ current_status ? ' dans cet état' }}</h2>
+        <p>Les commandes des clients apparaîtront ici.</p>
+    </div>
     {% endif %}
-</div>
+</section>
 {% endblock %}
-

@@ -4,6 +4,7 @@ namespace App\Entity;
 
 use App\Repository\AddressRepository;
 use Doctrine\ORM\Mapping as ORM;
+use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: AddressRepository::class)]
 class Address
@@ -14,18 +15,27 @@ class Address
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Indiquez le numéro et la rue.')]
+    #[Assert\Length(max: 255)]
     private ?string $street = null;
 
     #[ORM\Column(length: 100)]
+    #[Assert\NotBlank(message: 'Indiquez la ville.')]
+    #[Assert\Length(max: 100)]
     private ?string $city = null;
 
     #[ORM\Column(length: 20)]
+    #[Assert\NotBlank(message: 'Indiquez le code postal.')]
+    #[Assert\Regex(pattern: '/^[A-Za-z0-9][A-Za-z0-9 -]{1,18}[A-Za-z0-9]$/', message: 'Ce code postal n\'est pas reconnu.')]
     private ?string $postalCode = null;
 
     #[ORM\Column(length: 100)]
-    private ?string $country = null;
+    #[Assert\NotBlank(message: 'Indiquez le pays.')]
+    #[Assert\Length(max: 100)]
+    private ?string $country = 'France';
 
     #[ORM\Column(length: 100, nullable: true)]
+    #[Assert\Length(max: 100)]
     private ?string $complement = null;
 
     #[ORM\Column]

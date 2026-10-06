@@ -1,11 +1,55 @@
+# Serveur de production : FrankenPHP (Caddy + PHP dans un même processus).
+# Le HTTPS est terminé en amont par Railway ; ce serveur écoute en HTTP sur le port fourni.
 {
-    auto_https off
-    admin off
+	admin off
+	auto_https off
+	frankenphp
+	servers {
+		# Les en-têtes X-Forwarded-* ne sont acceptés que du réseau interne de la plateforme.
+		trusted_proxies static private_ranges 100.64.0.0/10
+	}
 }
 
-:{$PORT} {
-    root * public
-    encode gzip
-    php_server
-}
+:{$PORT:8080} {
+	root * public
+	encode zstd gzip
 
+	header {
+		-Server
+		-X-Powered-By
+	}
+
+	route {
+		# Seul le contrôleur frontal de Symfony exécute du PHP : toute demande directe
+		# d'un fichier .php (y compris un fichier qui aurait été déposé) est refusée.
+		@php_direct path *.php *.php/*
+		respond @php_direct 404
+
+		# Fichiers cachés (.env, .git…) : jamais servis.
+		@hidden path */.*
+		respond @hidden 404
+
+		# Images envoyées depuis l'administration : servies comme de simples fichiers.
+		@uploads path /images/*
+		header @uploads {
+			X-Content-Type-Options nosniff
+			Content-Security-Policy "default-src 'none'; sandbox"
+			Cache-Control "public, max-age=86400"
+		}
+
+		# Feuille de style, script et polices : l'adresse change à chaque déploiement.
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+
+		php_server
+	}
+
+	# Le contrôle de santé de la plateforme n'encombre pas le journal.
+	@sante path /sante
+	log_skip @sante
+
+	log {
+		output stdout
+		format json
+	}
+}

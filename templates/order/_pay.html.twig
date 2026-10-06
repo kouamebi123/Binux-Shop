@@ -1,0 +1,12 @@
+{# Bouton de paiement d'une commande en attente. Variable : order. #}
+{% if shop.paymentAvailable %}
+    <form method="post" action="{{ path('app_payment_checkout', {orderNumber: order.orderNumber}) }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('pay_' ~ order.orderNumber) }}">
+        <button type="submit" class="btn btn--block">{{ icon('lock') }} Payer {{ order.total|eur }}</button>
+    </form>
+    {% if shop.demo %}
+        <p class="fine">Mode test&nbsp;: utilisez la carte 4242&nbsp;4242&nbsp;4242&nbsp;4242, une date future et un cryptogramme quelconque. Rien n'est débité.</p>
+    {% endif %}
+{% else %}
+    <p class="note note--warn">{{ icon('triangle-alert') }}<span>Le paiement en ligne n'est pas disponible pour le moment.</span></p>
+{% endif %}

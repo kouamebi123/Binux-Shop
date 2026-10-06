@@ -1,61 +1,30 @@
-{% extends 'base.html.twig' %}
+{% extends 'security/_layout.html.twig' %}
 
-{% block title %}Connexion - Binux Shop{% endblock %}
+{% block title %}Connexion · Binux Shop{% endblock %}
 
-{% block body %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-5">
-            <div class="card shadow">
-                <div class="card-body p-5">
-                    <h2 class="text-center mb-4 fw-bold">Connexion</h2>
-                    
-                    {% if error %}
-                        <div class="alert alert-danger">
-                            {{ error.messageKey|trans(error.messageData, 'security') }}
-                        </div>
-                    {% endif %}
+{% block auth_body %}
+    <h1>Connexion</h1>
+    <p>Heureux de vous revoir.</p>
 
-                    <form method="post">
-                        <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" 
-                                   class="form-control" 
-                                   id="email" 
-                                   name="_username" 
-                                   value="{{ last_username }}" 
-                                   required 
-                                   autofocus>
-                        </div>
+    {% if error %}
+        <ul class="field__errors field__errors--global" role="alert">
+            <li>{{ error.messageKey|trans(error.messageData, 'security') }}</li>
+        </ul>
+    {% endif %}
 
-                        <div class="mb-3">
-                            <label for="password" class="form-label">Mot de passe</label>
-                            <input type="password" 
-                                   class="form-control" 
-                                   id="password" 
-                                   name="_password" 
-                                   required>
-                        </div>
-
-                        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
-
-                        <div class="d-grid mb-3">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-box-arrow-in-right"></i> Se connecter
-                            </button>
-                        </div>
-
-                        <div class="text-center">
-                            <p class="mb-0">
-                                Pas encore de compte ? 
-                                <a href="{{ path('app_register') }}" class="text-decoration-none">Inscrivez-vous</a>
-                            </p>
-                        </div>
-                    </form>
-                </div>
-            </div>
+    <form method="post" action="{{ path('app_login') }}">
+        <div class="field">
+            <label class="field__label" for="username">Adresse e-mail</label>
+            <input type="email" class="form-control" id="username" name="_username" value="{{ last_username }}" required autofocus autocomplete="email">
         </div>
-    </div>
-</div>
-{% endblock %}
+        <div class="field">
+            <label class="field__label" for="password">Mot de passe</label>
+            <input type="password" class="form-control" id="password" name="_password" required autocomplete="current-password">
+        </div>
+        <input type="hidden" name="_csrf_token" value="{{ csrf_token('authenticate') }}">
+        {% if target_path %}<input type="hidden" name="_target_path" value="{{ target_path }}">{% endif %}
+        <button type="submit" class="btn btn--block">Se connecter</button>
+    </form>
 
+    <p class="auth__alt">Pas encore de compte&nbsp;? <a href="{{ path('app_register') }}">Créer un compte</a></p>
+{% endblock %}

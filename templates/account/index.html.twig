@@ -1,76 +1,41 @@
-{% extends 'base.html.twig' %}
+{% extends 'account/_layout.html.twig' %}
 
-{% block title %}Mon compte - Binux Shop{% endblock %}
+{% block title %}Mon compte · Binux Shop{% endblock %}
+{% block account_title %}Bonjour {{ app.user.firstName }}{% endblock %}
+{% block account_intro %}<p>{{ app.user.email }}, client depuis le {{ app.user.createdAt|date('d/m/Y') }}.</p>{% endblock %}
 
-{% block body %}
-<div class="bg-light py-5">
-    <div class="container">
-        <h1 class="fw-bold">Mon compte</h1>
-        <p class="lead">Bienvenue {{ app.user.firstName }} {{ app.user.lastName }}</p>
-    </div>
-</div>
-
-<div class="container my-5">
-    <div class="row g-4">
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ path('app_account_profile') }}" class="text-decoration-none">
-                <div class="card h-100 text-center">
-                    <div class="card-body">
-                        <i class="bi bi-person-circle text-primary" style="font-size: 4rem;"></i>
-                        <h5 class="card-title mt-3 fw-bold">Mon profil</h5>
-                        <p class="card-text text-muted">Gérer mes informations personnelles</p>
-                    </div>
-                </div>
-            </a>
+{% block account_body %}
+    <div class="stack">
+        <div class="tiles">
+            <a class="tile-link" href="{{ path('app_order_list') }}">{{ icon('receipt') }}<strong>Commandes</strong><span>{{ app.user.orders|length }} passée{{ app.user.orders|length > 1 ? 's' }}</span></a>
+            <a class="tile-link" href="{{ path('app_account_addresses') }}">{{ icon('map-pin') }}<strong>Adresses</strong><span>{{ app.user.addresses|length }} enregistrée{{ app.user.addresses|length > 1 ? 's' }}</span></a>
+            <a class="tile-link" href="{{ path('app_account_profile') }}">{{ icon('user') }}<strong>Profil</strong><span>Nom, e-mail, téléphone</span></a>
         </div>
 
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ path('app_order_list') }}" class="text-decoration-none">
-                <div class="card h-100 text-center">
-                    <div class="card-body">
-                        <i class="bi bi-bag text-primary" style="font-size: 4rem;"></i>
-                        <h5 class="card-title mt-3 fw-bold">Mes commandes</h5>
-                        <p class="card-text text-muted">Suivre et consulter mes commandes</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-
-        <div class="col-md-6 col-lg-4">
-            <a href="{{ path('app_account_addresses') }}" class="text-decoration-none">
-                <div class="card h-100 text-center">
-                    <div class="card-body">
-                        <i class="bi bi-geo-alt text-primary" style="font-size: 4rem;"></i>
-                        <h5 class="card-title mt-3 fw-bold">Mes adresses</h5>
-                        <p class="card-text text-muted">Gérer mes adresses de livraison</p>
-                    </div>
-                </div>
-            </a>
-        </div>
-    </div>
-
-    <div class="row mt-5">
-        <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-3">Informations personnelles</h5>
-                    <p><strong>Email :</strong> {{ app.user.email }}</p>
-                    <p><strong>Téléphone :</strong> {{ app.user.phone ?: 'Non renseigné' }}</p>
-                    <p class="mb-0"><strong>Membre depuis :</strong> {{ app.user.createdAt|date('d/m/Y') }}</p>
-                </div>
+        {% if recent_orders|length > 0 %}
+        <section aria-labelledby="dernieres">
+            <div class="section__head">
+                <h2 id="dernieres">Dernières commandes</h2>
+                <a class="link-more" href="{{ path('app_order_list') }}">Toutes mes commandes</a>
             </div>
-        </div>
-
-        <div class="col-lg-6 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-3">Statistiques</h5>
-                    <p><strong>Nombre de commandes :</strong> {{ app.user.orders|length }}</p>
-                    <p class="mb-0"><strong>Adresses enregistrées :</strong> {{ app.user.addresses|length }}</p>
-                </div>
-            </div>
-        </div>
+            <ul class="rows">
+                {% for order in recent_orders %}
+                <li>
+                    <a class="row-card" href="{{ path('app_order_show', {id: order.id}) }}">
+                        <span class="row-card__main">
+                            <span class="order-number">{{ order.orderNumber }}</span>
+                            <span class="row-card__meta">{{ order.createdAt|date('d/m/Y') }}</span>
+                        </span>
+                        <span class="row-card__end">
+                            {{ include('order/_status.html.twig') }}
+                            <span class="amount">{{ order.total|eur }}</span>
+                            {{ icon('chevron-right') }}
+                        </span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
+        {% endif %}
     </div>
-</div>
 {% endblock %}
-

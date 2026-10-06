@@ -1,0 +1,39 @@
+{% extends 'security/_layout.html.twig' %}
+
+{% block title %}Installation · Binux Shop{% endblock %}
+{% block auth_aside %}Cette page n'existe que le temps de créer le compte administrateur.{% endblock %}
+
+{% block auth_body %}
+    <h1>Compte administrateur</h1>
+    <p>Saisissez le code d'installation défini sur le serveur, puis choisissez vos identifiants.</p>
+
+    {% if errors|length > 0 %}
+        <ul class="field__errors field__errors--global" role="alert">
+            {% for error in errors %}<li>{{ error }}</li>{% endfor %}
+        </ul>
+    {% endif %}
+
+    <form method="post" action="{{ path('app_setup') }}">
+        <input type="hidden" name="_token" value="{{ csrf_token('setup') }}">
+        <div class="field">
+            <label class="field__label" for="token">Code d'installation</label>
+            <input type="password" class="form-control" id="token" name="token" required autocomplete="off">
+            <p class="field__help">Valeur de la variable SETUP_TOKEN, visible dans Railway.</p>
+        </div>
+        <div class="field">
+            <label class="field__label" for="email">Adresse e-mail de l'administrateur</label>
+            <input type="email" class="form-control" id="email" name="email" value="{{ email }}" required autocomplete="email">
+            <p class="field__help">Si un compte existe déjà avec cette adresse, il devient administrateur et son mot de passe est remplacé.</p>
+        </div>
+        <div class="field">
+            <label class="field__label" for="password">Mot de passe</label>
+            <input type="password" class="form-control" id="password" name="password" required minlength="12" autocomplete="new-password">
+            <p class="field__help">12 caractères au minimum.</p>
+        </div>
+        <div class="field">
+            <label class="field__label" for="password_confirm">Confirmer le mot de passe</label>
+            <input type="password" class="form-control" id="password_confirm" name="password_confirm" required minlength="12" autocomplete="new-password">
+        </div>
+        <button type="submit" class="btn btn--block">Créer le compte administrateur</button>
+    </form>
+{% endblock %}

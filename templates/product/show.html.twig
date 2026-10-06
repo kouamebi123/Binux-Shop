@@ -1,127 +1,96 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ product.name }} - Binux Shop{% endblock %}
+{% block title %}{{ product.name }} · Binux Shop{% endblock %}
+{% block description %}{{ product.description ? (product.description|length > 155 ? product.description|slice(0, 152) ~ '…' : product.description) : product.name }}{% endblock %}
 
 {% block body %}
-<div class="bg-light py-3">
-    <div class="container">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('app_product_index') }}">Produits</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('app_product_category', {slug: product.category.slug}) }}">{{ product.category.name }}</a></li>
-                <li class="breadcrumb-item active">{{ product.name }}</li>
-            </ol>
-        </nav>
+<div class="wrap">
+    <div class="page-head">
+        <ol class="crumbs">
+            <li><a href="{{ path('app_home') }}">Accueil</a></li>
+            <li><a href="{{ path('app_product_index') }}">Articles</a></li>
+            <li><a href="{{ path('app_product_category', {slug: product.category.slug}) }}">{{ product.category.name }}</a></li>
+            <li aria-current="page">{{ product.name }}</li>
+        </ol>
     </div>
-</div>
 
-<div class="container my-5">
-    <div class="row">
-        <div class="col-lg-6 mb-4">
-            <div class="card">
-                <img src="{{ product.imageUrl ?: 'https://via.placeholder.com/600x500?text=' ~ product.name }}" 
-                     class="card-img-top" 
-                     style="height: 500px; object-fit: cover;" 
-                     alt="{{ product.name }}">
-            </div>
+    <article class="product">
+        <div class="product__media thumb">
+            <span class="thumb__mono">{{ product.name|first|upper }}</span>
+            {% if product.imageUrl %}
+                <img src="{{ product.imageUrl }}" alt="{{ product.name }}" width="900" height="1080" fetchpriority="high" data-img>
+            {% endif %}
         </div>
 
-        <div class="col-lg-6">
-            <h1 class="fw-bold mb-3">{{ product.name }}</h1>
-            
-            <div class="mb-3">
-                <span class="badge bg-primary">{{ product.category.name }}</span>
-                {% if product.hasDiscount %}
-                    <span class="badge bg-danger">-{{ product.discountPercentage }}%</span>
-                {% endif %}
-                {% if not product.isInStock %}
-                    <span class="badge bg-secondary">Rupture de stock</span>
-                {% endif %}
+        <div class="product__info">
+            <div class="product__tags">
+                <a class="tag" href="{{ path('app_product_category', {slug: product.category.slug}) }}">{{ product.category.name }}</a>
+                {% if product.hasDiscount %}<span class="tag tag--sale">−{{ product.discountPercentage }}&nbsp;%</span>{% endif %}
             </div>
 
-            <div class="mb-4">
-                <div class="d-flex align-items-center gap-3">
-                    <span class="h2 mb-0 text-primary">{{ product.price }} €</span>
-                    {% if product.oldPrice %}
-                        <span class="h4 mb-0 text-muted text-decoration-line-through">{{ product.oldPrice }} €</span>
-                    {% endif %}
-                </div>
-            </div>
+            <h1>{{ product.name }}</h1>
+
+            <p class="price price--lg">
+                <span class="price__now">{{ product.price|eur }}</span>
+                {% if product.hasDiscount %}
+                    <s class="price__old"><span class="sr-only">Ancien prix&nbsp;: </span>{{ product.oldPrice|eur }}</s>
+                {% endif %}
+            </p>
 
             {% if product.description %}
-            <div class="mb-4">
-                <h5 class="fw-bold">Description</h5>
-                <p class="text-muted">{{ product.description }}</p>
-            </div>
+                <p class="product__desc">{{ product.description }}</p>
             {% endif %}
 
-            <div class="mb-4">
-                <h5 class="fw-bold">Disponibilité</h5>
-                {% if product.isInStock %}
-                    <p class="text-success">
-                        <i class="bi bi-check-circle"></i> En stock ({{ product.stock }} disponibles)
-                    </p>
+            <div class="buy">
+                {% if not product.inStock %}
+                    <p class="stock stock--out">Épuisé pour le moment</p>
+                {% elseif product.lowStock %}
+                    <p class="stock stock--low">Plus que {{ product.stock }} en stock</p>
                 {% else %}
-                    <p class="text-danger">
-                        <i class="bi bi-x-circle"></i> Rupture de stock
-                    </p>
+                    <p class="stock">En stock, {{ product.stock }} disponibles</p>
+                {% endif %}
+
+                {% if product.inStock %}
+                    {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                        <form class="buy__row" method="post" action="{{ path('app_cart_add', {id: product.id}) }}" data-cart-add>
+                            <input type="hidden" name="_token" value="{{ csrf_token('cart_add_' ~ product.id) }}">
+                            <div class="stepper">
+                                <button type="button" data-step="-1" aria-label="Diminuer la quantité">{{ icon('minus', 'icon--sm') }}</button>
+                                <label class="sr-only" for="quantity">Quantité</label>
+                                <input type="number" id="quantity" name="quantity" value="1" min="1" max="{{ min(product.stock, max_quantity) }}" inputmode="numeric">
+                                <button type="button" data-step="1" aria-label="Augmenter la quantité">{{ icon('plus', 'icon--sm') }}</button>
+                            </div>
+                            <button type="submit" class="btn">{{ icon('shopping-bag') }} Ajouter au panier</button>
+                        </form>
+                    {% else %}
+                        <a class="btn btn--block" href="{{ path('app_login', {retour: path('app_product_show', {slug: product.slug})}) }}">Se connecter pour commander</a>
+                        <p class="fine">Pas encore de compte&nbsp;? <a href="{{ path('app_register') }}">Créez-le en une minute</a>.</p>
+                    {% endif %}
                 {% endif %}
             </div>
 
-            {% if is_granted('IS_AUTHENTICATED_FULLY') and product.isInStock %}
-            <form method="post" action="{{ path('app_cart_add', {id: product.id}) }}">
-                <input type="hidden" name="_token" value="{{ csrf_token('cart_add_' ~ product.id) }}">
-                <div class="mb-3">
-                    <label for="quantity" class="form-label fw-bold">Quantité</label>
-                    <input type="number" 
-                           class="form-control" 
-                           id="quantity" 
-                           name="quantity" 
-                           value="1" 
-                           min="1" 
-                           max="{{ product.stock }}" 
-                           style="width: 100px;">
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-lg px-5">
-                    <i class="bi bi-cart-plus"></i> Ajouter au panier
-                </button>
-            </form>
-            {% elseif not is_granted('IS_AUTHENTICATED_FULLY') %}
-                <div class="alert alert-info">
-                    <i class="bi bi-info-circle"></i> 
-                    <a href="{{ path('app_login') }}">Connectez-vous</a> pour ajouter ce produit au panier
-                </div>
-            {% endif %}
+            <ul class="facts">
+                <li>{{ icon('truck') }} <span>Livraison offerte, sans minimum d'achat.</span></li>
+                <li>{{ icon('lock') }} <span>Paiement par carte sur la page sécurisée de Stripe.</span></li>
+                <li>{{ icon('rotate-ccw') }} <span>Commande annulable en un clic tant qu'elle n'est pas payée.</span></li>
+            </ul>
         </div>
-    </div>
+    </article>
+</div>
 
-    <!-- Related Products -->
-    {% if related_products|length > 0 %}
-    <section class="mt-5 pt-5 border-top">
-        <h3 class="fw-bold mb-4">Produits similaires</h3>
-        <div class="row g-4">
+{% if related_products|length > 0 %}
+<section class="section section--tint" aria-labelledby="meme-rayon">
+    <div class="wrap">
+        <div class="section__head">
+            <h2 id="meme-rayon">Dans le même rayon</h2>
+            <a class="link-more" href="{{ path('app_product_category', {slug: product.category.slug}) }}">Tout le rayon {{ product.category.name }}</a>
+        </div>
+        <div class="grid-products">
             {% for relatedProduct in related_products %}
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100">
-                    <img src="{{ relatedProduct.imageUrl ?: 'https://via.placeholder.com/300x250?text=' ~ relatedProduct.name }}" 
-                         class="card-img-top" alt="{{ relatedProduct.name }}">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ relatedProduct.name }}</h5>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="h5 mb-0 text-primary">{{ relatedProduct.price }} €</span>
-                            <a href="{{ path('app_product_show', {slug: relatedProduct.slug}) }}" class="btn btn-sm btn-outline-primary">
-                                Voir
-                            </a>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                {{ include('product/_card.html.twig', {product: relatedProduct}) }}
             {% endfor %}
         </div>
-    </section>
-    {% endif %}
-</div>
+    </div>
+</section>
+{% endif %}
 {% endblock %}
-

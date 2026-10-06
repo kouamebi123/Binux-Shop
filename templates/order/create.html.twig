@@ -1,127 +1,66 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Créer une commande - Binux Shop{% endblock %}
+{% block title %}Livraison · Binux Shop{% endblock %}
 
 {% block body %}
-<div class="bg-light py-5">
-    <div class="container">
-        <h1 class="fw-bold">Finaliser ma commande</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('app_cart_index') }}">Panier</a></li>
-                <li class="breadcrumb-item active">Commande</li>
-            </ol>
-        </nav>
-    </div>
-</div>
+<div class="wrap">
+    <header class="page-head">
+        <h1>Finaliser ma commande</h1>
+        <ol class="steps" aria-label="Étapes de la commande">
+            <li class="is-done"><a href="{{ path('app_cart_index') }}">Panier</a></li>
+            <li aria-current="step">Livraison</li>
+            <li>Paiement</li>
+        </ol>
+    </header>
 
-<div class="container my-5">
-    <div class="row">
-        <div class="col-lg-8 mb-4">
-            <div class="card mb-4">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-4">
-                        <i class="bi bi-geo-alt"></i> Adresse de livraison
-                    </h5>
-                    
-                    {{ form_start(form) }}
-                    
-                    <div class="mb-3">
-                        {{ form_row(form.address.street) }}
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form_row(form.address.complement) }}
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-8 mb-3">
-                            {{ form_row(form.address.city) }}
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            {{ form_row(form.address.postalCode) }}
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form_row(form.address.country) }}
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="form-check">
-                            {{ form_widget(form.address.isDefault) }}
-                            {{ form_label(form.address.isDefault) }}
-                        </div>
-                    </div>
+    {{ form_start(form, {attr: {novalidate: false}}) }}
+    <div class="split">
+        <div>
+            <section class="panel" aria-labelledby="adresse">
+                <h2 id="adresse">Adresse de livraison</h2>
+                {{ form_errors(form) }}
+                <div class="form-grid">
+                    {{ form_row(form.address.street, {row_attr: {class: 'field--wide'}, attr: {autocomplete: 'address-line1'}}) }}
+                    {{ form_row(form.address.complement, {row_attr: {class: 'field--wide'}, attr: {autocomplete: 'address-line2'}}) }}
+                    {{ form_row(form.address.postalCode, {attr: {autocomplete: 'postal-code'}}) }}
+                    {{ form_row(form.address.city, {attr: {autocomplete: 'address-level2'}}) }}
+                    {{ form_row(form.address.country, {row_attr: {class: 'field--wide'}, attr: {autocomplete: 'country-name'}}) }}
+                    {{ form_row(form.address.isDefault) }}
                 </div>
-            </div>
+            </section>
 
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-4">
-                        <i class="bi bi-chat-left-text"></i> Notes de commande
-                    </h5>
-                    
-                    {{ form_row(form.notes) }}
-                </div>
-            </div>
+            <section class="panel" aria-labelledby="notes">
+                <h2 id="notes">Un mot pour la livraison</h2>
+                {{ form_row(form.notes, {label: 'Notes de commande', help: 'Code d\'accès, étage, créneau préféré.'}) }}
+            </section>
         </div>
 
-        <div class="col-lg-4">
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-4">Récapitulatif</h5>
-                    
-                    {% for item in cart.items %}
-                    <div class="d-flex justify-content-between mb-2">
-                        <span class="small">{{ item.product.name }} x {{ item.quantity }}</span>
-                        <span class="small fw-bold">{{ item.total }} €</span>
+        <aside class="panel panel--sticky" aria-labelledby="recap">
+            <h2 id="recap">Récapitulatif</h2>
+            <ul class="lines">
+                {% for item in cart.items %}
+                <li class="line">
+                    <span class="thumb thumb--sm">
+                        <span class="thumb__mono">{{ item.product.name|first|upper }}</span>
+                        {% if item.product.imageUrl %}<img src="{{ item.product.imageUrl }}" alt="" loading="lazy" data-img>{% endif %}
+                    </span>
+                    <div>
+                        <p class="line__name">{{ item.product.name }}</p>
+                        <p class="line__meta">{{ item.quantity }} × {{ item.price|eur }}</p>
                     </div>
-                    {% endfor %}
-                    
-                    <hr>
-                    
-                    <div class="d-flex justify-content-between mb-2">
-                        <span>Sous-total</span>
-                        <span class="fw-bold">{{ cart.total }} €</span>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-3">
-                        <span>Livraison</span>
-                        <span class="text-success fw-bold">Gratuite</span>
-                    </div>
-                    
-                    <hr>
-                    
-                    <div class="d-flex justify-content-between mb-4">
-                        <span class="h5 mb-0">Total</span>
-                        <span class="h5 mb-0 text-primary">{{ cart.total }} €</span>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary w-100 btn-lg">
-                        <i class="bi bi-check-circle"></i> Valider la commande
-                    </button>
-                    
-                    {{ form_end(form) }}
-                </div>
-            </div>
-
-            <div class="card">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3">
-                        <i class="bi bi-truck text-primary"></i> Livraison gratuite
-                    </h6>
-                    <p class="small text-muted mb-3">Livraison sous 3-5 jours ouvrés</p>
-                    
-                    <h6 class="fw-bold mb-3">
-                        <i class="bi bi-shield-check text-success"></i> Paiement sécurisé
-                    </h6>
-                    <p class="small text-muted mb-0">Vos données sont protégées</p>
-                </div>
-            </div>
-        </div>
+                    <p class="line__total">{{ item.total|eur }}</p>
+                </li>
+                {% endfor %}
+            </ul>
+            <dl class="totals totals--after-lines">
+                <div><dt>Sous-total</dt><dd>{{ cart.total|eur }}</dd></div>
+                <div><dt>Livraison</dt><dd>Offerte</dd></div>
+                <div class="totals__grand"><dt>Total à payer</dt><dd>{{ cart.total|eur }}</dd></div>
+            </dl>
+            <button type="submit" class="btn btn--block">{{ icon('lock') }} Valider et payer</button>
+            <p class="fine">Vous serez dirigé vers la page de paiement de Stripe. Vos articles vous sont réservés pendant deux heures.</p>
+        </aside>
     </div>
+    {{ form_end(form) }}
 </div>
 {% endblock %}
-

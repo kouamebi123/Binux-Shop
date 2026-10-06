@@ -1,0 +1,58 @@
+{# Barre de filtres + grille. Variables : products, listing, filters, sorts, categories, category (ou null), route, route_params. #}
+<div class="toolbar">
+    <nav class="chips" aria-label="Rayons">
+        <a class="chip" href="{{ path('app_product_index') }}" {% if category is null and route == 'app_product_index' %}aria-current="page"{% endif %}>Tout</a>
+        {% for row in categories %}
+            <a class="chip" href="{{ path('app_product_category', {slug: row.category.slug}) }}"
+               {% if category and category.id == row.category.id %}aria-current="page"{% endif %}>
+                {{ row.category.name }} <small>{{ row.count }}</small>
+            </a>
+        {% endfor %}
+    </nav>
+
+    <form class="toolbar__filters" method="get" action="{{ path(route, route_params) }}" data-filters>
+        {% if filters.q %}<input type="hidden" name="q" value="{{ filters.q }}">{% endif %}
+        <label class="check">
+            <input type="checkbox" name="stock" value="1" {{ filters.stock ? 'checked' }}>
+            <span>En stock</span>
+        </label>
+        <label class="check">
+            <input type="checkbox" name="promo" value="1" {{ filters.promo ? 'checked' }}>
+            <span>En promotion</span>
+        </label>
+        <label class="sr-only" for="tri">Trier par</label>
+        <select class="form-select" id="tri" name="tri">
+            {% for key, label in sorts %}
+                <option value="{{ key }}" {{ filters.tri == key ? 'selected' }}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button class="btn btn--sm btn--quiet" type="submit" data-filters-submit>Appliquer</button>
+    </form>
+</div>
+
+{% if products|length > 0 %}
+    <p class="result-count" aria-live="polite">{{ listing.total }} article{{ listing.total > 1 ? 's' }}</p>
+    <div class="grid-products">
+        {% for product in products %}
+            {{ include('product/_card.html.twig', {product: product, heading: 'h2'}) }}
+        {% endfor %}
+    </div>
+
+    {% if listing.pages > 1 %}
+        {% set params = route_params|merge(filters|filter(v => v))  %}
+        <nav class="pagination" aria-label="Pages">
+            {% for p in 1..listing.pages %}
+                <a class="chip" href="{{ path(route, params|merge({page: p})) }}" {% if p == listing.page %}aria-current="page"{% endif %}>
+                    <span class="sr-only">Page </span>{{ p }}
+                </a>
+            {% endfor %}
+        </nav>
+    {% endif %}
+{% else %}
+    <div class="empty">
+        {{ icon('search') }}
+        <h2>Aucun article ne correspond</h2>
+        <p>Retirez un filtre ou revenez à l'ensemble du catalogue.</p>
+        <a class="btn btn--quiet" href="{{ path('app_product_index') }}">Voir tous les articles</a>
+    </div>
+{% endif %}

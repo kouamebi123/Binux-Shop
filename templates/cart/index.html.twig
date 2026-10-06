@@ -1,126 +1,78 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}Mon panier - Binux Shop{% endblock %}
+{% block title %}Mon panier · Binux Shop{% endblock %}
 
 {% block body %}
-<div class="bg-light py-5">
-    <div class="container">
-        <h1 class="fw-bold">Mon panier</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                <li class="breadcrumb-item active">Panier</li>
+<div class="wrap">
+    <header class="page-head">
+        <h1>Mon panier</h1>
+        {% if cart.items|length > 0 %}
+            <ol class="steps" aria-label="Étapes de la commande">
+                <li aria-current="step">Panier</li>
+                <li>Livraison</li>
+                <li>Paiement</li>
             </ol>
-        </nav>
-    </div>
-</div>
+        {% endif %}
+    </header>
 
-<div class="container my-5">
     {% if cart.items|length > 0 %}
-    <div class="row">
-        <div class="col-lg-8 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-4">Articles dans votre panier</h5>
-                    
-                    {% for item in cart.items %}
-                    <div class="row align-items-center mb-4 pb-4 border-bottom">
-                        <div class="col-md-2">
-                            <img src="{{ item.product.imageUrl ?: 'https://via.placeholder.com/100?text=' ~ item.product.name }}" 
-                                 class="img-fluid rounded" 
-                                 alt="{{ item.product.name }}">
-                        </div>
-                        <div class="col-md-4">
-                            <h6 class="fw-bold">{{ item.product.name }}</h6>
-                            <p class="text-muted small mb-0">{{ item.product.category.name }}</p>
-                        </div>
-                        <div class="col-md-2">
-                            <p class="mb-0 fw-bold">{{ item.price }} €</p>
-                        </div>
-                        <div class="col-md-2">
-                            <form method="post" action="{{ path('app_cart_update', {id: item.id}) }}" class="d-inline">
-                                <input type="hidden" name="_token" value="{{ csrf_token('cart_update_' ~ item.id) }}">
-                                <input type="number" 
-                                       name="quantity" 
-                                       value="{{ item.quantity }}" 
-                                       min="1" 
-                                       max="{{ item.product.stock }}"
-                                       class="form-control form-control-sm"
-                                       onchange="this.form.submit()">
-                            </form>
-                        </div>
-                        <div class="col-md-2 text-end">
-                            <p class="mb-2 fw-bold text-primary">{{ item.total }} €</p>
-                            <form method="post" action="{{ path('app_cart_remove', {id: item.id}) }}" class="d-inline">
-                                <input type="hidden" name="_token" value="{{ csrf_token('cart_remove_' ~ item.id) }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="bi bi-trash"></i>
-                                </button>
-                            </form>
-                        </div>
+    <div class="split">
+        <section class="panel" aria-label="Articles du panier">
+            <ul class="lines">
+                {% for item in cart.items %}
+                <li class="line">
+                    <a class="thumb thumb--sm" href="{{ path('app_product_show', {slug: item.product.slug}) }}" tabindex="-1" aria-hidden="true">
+                        <span class="thumb__mono">{{ item.product.name|first|upper }}</span>
+                        {% if item.product.imageUrl %}<img src="{{ item.product.imageUrl }}" alt="" loading="lazy" data-img>{% endif %}
+                    </a>
+                    <div>
+                        <a class="line__name" href="{{ path('app_product_show', {slug: item.product.slug}) }}">{{ item.product.name }}</a>
+                        <p class="line__meta">{{ item.product.category.name }}, {{ item.price|eur }} l'unité</p>
                     </div>
-                    {% endfor %}
-
-                    <div class="text-end">
-                        <form method="post" action="{{ path('app_cart_clear') }}" class="d-inline">
-                            <input type="hidden" name="_token" value="{{ csrf_token('cart_clear') }}">
-                            <button type="submit" class="btn btn-outline-danger">
-                                <i class="bi bi-trash"></i> Vider le panier
-                            </button>
+                    <p class="line__total">{{ item.total|eur }}</p>
+                    <div class="line__controls">
+                        <form method="post" action="{{ path('app_cart_update', {id: item.id}) }}" data-autosubmit>
+                            <input type="hidden" name="_token" value="{{ csrf_token('cart_update_' ~ item.id) }}">
+                            <div class="stepper">
+                                <button type="button" data-step="-1" aria-label="Diminuer la quantité de {{ item.product.name }}">{{ icon('minus', 'icon--sm') }}</button>
+                                <label class="sr-only" for="qte-{{ item.id }}">Quantité de {{ item.product.name }}</label>
+                                <input type="number" id="qte-{{ item.id }}" name="quantity" value="{{ item.quantity }}" min="1" max="{{ min(item.product.stock, max_quantity) }}" inputmode="numeric">
+                                <button type="button" data-step="1" aria-label="Augmenter la quantité de {{ item.product.name }}">{{ icon('plus', 'icon--sm') }}</button>
+                            </div>
+                            <noscript><button class="btn btn--sm btn--quiet" type="submit">Mettre à jour</button></noscript>
+                        </form>
+                        <form method="post" action="{{ path('app_cart_remove', {id: item.id}) }}">
+                            <input type="hidden" name="_token" value="{{ csrf_token('cart_remove_' ~ item.id) }}">
+                            <button type="submit" class="link-button">Retirer<span class="sr-only"> {{ item.product.name }} du panier</span></button>
                         </form>
                     </div>
-                </div>
-            </div>
-        </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </section>
 
-        <div class="col-lg-4">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title fw-bold mb-4">Résumé de la commande</h5>
-                    
-                    <div class="d-flex justify-content-between mb-3">
-                        <span>Sous-total ({{ cart.totalItems }} articles)</span>
-                        <span class="fw-bold">{{ cart.total }} €</span>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
-                        <span>Livraison</span>
-                        <span class="text-success fw-bold">Gratuite</span>
-                    </div>
-                    
-                    <div class="d-flex justify-content-between mb-4">
-                        <span class="h5 mb-0">Total</span>
-                        <span class="h5 mb-0 text-primary">{{ cart.total }} €</span>
-                    </div>
-                    
-                    <a href="{{ path('app_order_create') }}" class="btn btn-primary w-100 btn-lg mb-2">
-                        <i class="bi bi-check-circle"></i> Commander
-                    </a>
-                    
-                    <a href="{{ path('app_product_index') }}" class="btn btn-outline-secondary w-100">
-                        <i class="bi bi-arrow-left"></i> Continuer mes achats
-                    </a>
-                </div>
-            </div>
-
-            <div class="card mt-3">
-                <div class="card-body">
-                    <h6 class="fw-bold mb-3"><i class="bi bi-shield-check text-success"></i> Paiement sécurisé</h6>
-                    <p class="small text-muted mb-0">Vos informations sont protégées et cryptées</p>
-                </div>
-            </div>
-        </div>
+        <aside class="panel panel--sticky" aria-labelledby="resume">
+            <h2 id="resume">Résumé de la commande</h2>
+            <dl class="totals">
+                <div><dt>Sous-total, {{ cart.totalItems }} article{{ cart.totalItems > 1 ? 's' }}</dt><dd>{{ cart.total|eur }}</dd></div>
+                <div><dt>Livraison</dt><dd>Offerte</dd></div>
+                <div class="totals__grand"><dt>Total</dt><dd>{{ cart.total|eur }}</dd></div>
+            </dl>
+            <a href="{{ path('app_order_create') }}" class="btn btn--block">Commander</a>
+            <p class="fine">{{ icon('lock', 'icon--sm') }}Le paiement se fait à l'étape suivante, sur la page sécurisée de Stripe.</p>
+            <form method="post" action="{{ path('app_cart_clear') }}" data-confirm="Vider entièrement le panier ?">
+                <input type="hidden" name="_token" value="{{ csrf_token('cart_clear') }}">
+                <p class="fine"><button type="submit" class="link-button">Vider le panier</button></p>
+            </form>
+        </aside>
     </div>
     {% else %}
-    <div class="text-center py-5">
-        <i class="bi bi-cart-x" style="font-size: 5rem; color: #ccc;"></i>
-        <h3 class="mt-4">Votre panier est vide</h3>
-        <p class="text-muted mb-4">Découvrez nos produits et ajoutez-en à votre panier</p>
-        <a href="{{ path('app_product_index') }}" class="btn btn-primary btn-lg">
-            <i class="bi bi-bag"></i> Voir les produits
-        </a>
+    <div class="empty">
+        {{ icon('shopping-bag') }}
+        <h2>Votre panier est vide</h2>
+        <p>Faites un tour en boutique&nbsp;: tout ce qui est affiché en stock peut partir aujourd'hui.</p>
+        <a href="{{ path('app_product_index') }}" class="btn">Voir les articles</a>
     </div>
     {% endif %}
 </div>
 {% endblock %}
-

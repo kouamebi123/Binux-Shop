@@ -1,71 +1,25 @@
-{% extends 'base.html.twig' %}
+{% extends 'account/_layout.html.twig' %}
 
-{% block title %}{{ title }} - Binux Shop{% endblock %}
+{% block title %}{{ title }} · Binux Shop{% endblock %}
+{% block account_title %}{{ title }}{% endblock %}
+{% set account_section = 'addresses' %}
 
-{% block body %}
-<div class="bg-light py-5">
-    <div class="container">
-        <h1 class="fw-bold">{{ title }}</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{{ path('app_home') }}">Accueil</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('app_account') }}">Mon compte</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('app_account_addresses') }}">Adresses</a></li>
-                <li class="breadcrumb-item active">{{ title }}</li>
-            </ol>
-        </nav>
-    </div>
-</div>
-
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-body p-4">
-                    {{ form_start(form) }}
-                    
-                    <div class="mb-3">
-                        {{ form_row(form.street) }}
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form_row(form.complement) }}
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-8 mb-3">
-                            {{ form_row(form.city) }}
-                        </div>
-                        <div class="col-md-4 mb-3">
-                            {{ form_row(form.postalCode) }}
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        {{ form_row(form.country) }}
-                    </div>
-                    
-                    <div class="mb-4">
-                        <div class="form-check">
-                            {{ form_widget(form.isDefault) }}
-                            {{ form_label(form.isDefault) }}
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ path('app_account_addresses') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Retour
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Enregistrer
-                        </button>
-                    </div>
-
-                    {{ form_end(form) }}
-                </div>
-            </div>
+{% block account_body %}
+    <section class="panel">
+        {{ form_start(form) }}
+        {{ form_errors(form) }}
+        <div class="form-grid">
+            {{ form_row(form.street, {row_attr: {class: 'field--wide'}, attr: {autocomplete: 'address-line1'}}) }}
+            {{ form_row(form.complement, {row_attr: {class: 'field--wide'}, attr: {autocomplete: 'address-line2'}}) }}
+            {{ form_row(form.postalCode, {attr: {autocomplete: 'postal-code'}}) }}
+            {{ form_row(form.city, {attr: {autocomplete: 'address-level2'}}) }}
+            {{ form_row(form.country, {row_attr: {class: 'field--wide'}, attr: {autocomplete: 'country-name'}}) }}
+            {{ form_row(form.isDefault) }}
         </div>
-    </div>
-</div>
+        <div class="form-actions">
+            <button type="submit" class="btn">Enregistrer</button>
+            <a href="{{ path('app_account_addresses') }}" class="btn btn--quiet">Annuler</a>
+        </div>
+        {{ form_end(form) }}
+    </section>
 {% endblock %}
-

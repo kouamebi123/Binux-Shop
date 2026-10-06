@@ -14,10 +14,12 @@ class OrderType extends AbstractType
         $builder
             ->add('address', AddressType::class, [
                 'label' => false,
+                'constraints' => [new \Symfony\Component\Validator\Constraints\Valid()],
             ])
             ->add('notes', TextareaType::class, [
                 'label' => 'Notes de commande (optionnel)',
                 'required' => false,
+                'constraints' => [new \Symfony\Component\Validator\Constraints\Length(max: 500)],
                 'attr' => [
                     'class' => 'form-control',
                     'rows' => 3,

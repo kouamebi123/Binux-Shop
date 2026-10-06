@@ -1,60 +1,25 @@
-{% extends 'base.html.twig' %}
+{% extends 'security/_layout.html.twig' %}
 
-{% block title %}Inscription - Binux Shop{% endblock %}
+{% block title %}Créer un compte · Binux Shop{% endblock %}
+{% block auth_aside %}Un compte suffit pour remplir un panier, commander et suivre chaque colis.{% endblock %}
 
-{% block body %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-body p-5">
-                    <h2 class="text-center mb-4 fw-bold">Créer un compte</h2>
-                    
-                    {{ form_start(form) }}
-                    
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form_row(form.firstName) }}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            {{ form_row(form.lastName) }}
-                        </div>
-                    </div>
+{% block auth_body %}
+    <h1>Créer un compte</h1>
+    <p>Une minute, et la boutique est à vous.</p>
 
-                    <div class="mb-3">
-                        {{ form_row(form.email) }}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_row(form.phone) }}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_row(form.plainPassword.first) }}
-                    </div>
-
-                    <div class="mb-4">
-                        {{ form_row(form.plainPassword.second) }}
-                    </div>
-
-                    <div class="d-grid mb-3">
-                        <button type="submit" class="btn btn-primary btn-lg">
-                            <i class="bi bi-person-plus"></i> S'inscrire
-                        </button>
-                    </div>
-
-                    <div class="text-center">
-                        <p class="mb-0">
-                            Déjà un compte ? 
-                            <a href="{{ path('app_login') }}" class="text-decoration-none">Connectez-vous</a>
-                        </p>
-                    </div>
-
-                    {{ form_end(form) }}
-                </div>
-            </div>
-        </div>
+    {{ form_start(form) }}
+    {{ form_errors(form) }}
+    <div class="form-grid">
+        {{ form_row(form.firstName, {attr: {autocomplete: 'given-name'}}) }}
+        {{ form_row(form.lastName, {attr: {autocomplete: 'family-name'}}) }}
+        {{ form_row(form.email, {row_attr: {class: 'field--wide'}, attr: {autocomplete: 'email'}}) }}
+        {{ form_row(form.phone, {row_attr: {class: 'field--wide'}, attr: {autocomplete: 'tel'}}) }}
+        {{ form_row(form.plainPassword.first, {row_attr: {class: 'field--wide'}}) }}
+        {{ form_row(form.plainPassword.second, {row_attr: {class: 'field--wide'}}) }}
     </div>
-</div>
-{% endblock %}
+    <button type="submit" class="btn btn--block">Créer mon compte</button>
+    <p class="fine">Vos informations servent uniquement à traiter vos commandes. <a href="{{ path('app_about') }}#donnees">En savoir plus</a></p>
+    {{ form_end(form) }}
 
+    <p class="auth__alt">Déjà client&nbsp;? <a href="{{ path('app_login') }}">Se connecter</a></p>
+{% endblock %}

@@ -34,7 +34,6 @@ class AddressType extends AbstractType
             ->add('country', TextType::class, [
                 'label' => 'Pays',
                 'attr' => ['class' => 'form-control'],
-                'data' => 'France',
             ])
             ->add('isDefault', CheckboxType::class, [
                 'label' => 'Adresse par défaut',

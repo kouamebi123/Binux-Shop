@@ -1,0 +1,37 @@
+{% extends 'base.html.twig' %}
+
+{% block body_class %}page-admin{% endblock %}
+
+{% block shell %}
+{% set section = admin_section|default('dashboard') %}
+<a class="skip-link" href="#contenu">Aller au contenu</a>
+<div class="admin">
+    <aside class="admin__side">
+        <a class="brand brand--footer" href="{{ path('app_admin_dashboard') }}"><span class="brand__a">Binux</span><span class="brand__b">Shop</span></a>
+        <p class="admin__role">Administration</p>
+        <nav class="admin__nav" aria-label="Administration">
+            <a href="{{ path('app_admin_dashboard') }}" {{ section == 'dashboard' ? 'aria-current="page"' }}>{{ icon('layout-dashboard') }} Tableau de bord</a>
+            <a href="{{ path('app_admin_orders') }}" {{ section == 'orders' ? 'aria-current="page"' }}>{{ icon('clipboard-list') }} Commandes</a>
+            <a href="{{ path('app_admin_products') }}" {{ section == 'products' ? 'aria-current="page"' }}>{{ icon('package') }} Produits</a>
+            <a href="{{ path('app_admin_categories') }}" {{ section == 'categories' ? 'aria-current="page"' }}>{{ icon('tags') }} Catégories</a>
+        </nav>
+        <nav class="admin__nav admin__nav--end" aria-label="Sortie">
+            <a href="{{ path('app_home') }}">{{ icon('store') }} Voir la boutique</a>
+            <a href="{{ logout_path('main') }}">{{ icon('log-out') }} Déconnexion</a>
+        </nav>
+    </aside>
+
+    <main class="admin__main" id="contenu" tabindex="-1">
+        <header class="admin__head">
+            <div>
+                <h1>{% block admin_title %}Tableau de bord{% endblock %}</h1>
+                {% block admin_intro %}{% endblock %}
+            </div>
+            <div class="admin__actions">{% block admin_actions %}{% endblock %}</div>
+        </header>
+        {{ include('_flashes.html.twig') }}
+        {% block admin_body %}{% endblock %}
+        <p class="admin__signature signature">Signé <a href="{{ shop.brandUrl }}" rel="noopener">BinuxLabs</a></p>
+    </main>
+</div>
+{% endblock %}

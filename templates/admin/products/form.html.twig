@@ -1,99 +1,44 @@
-{% extends 'base.html.twig' %}
+{% extends 'admin/_layout.html.twig' %}
 
-{% block title %}{{ title }} - Admin{% endblock %}
+{% block title %}{{ title }} · Administration{% endblock %}
+{% block admin_title %}{{ title }}{% endblock %}
+{% block admin_actions %}<a href="{{ path('app_admin_products') }}" class="btn btn--sm btn--quiet">Retour aux produits</a>{% endblock %}
+{% set admin_section = 'products' %}
 
-{% block body %}
-<div class="bg-dark text-white py-4">
-    <div class="container">
-        <h1 class="fw-bold">{{ title }}</h1>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb bg-transparent text-white-50 mb-0">
-                <li class="breadcrumb-item"><a href="{{ path('app_admin_dashboard') }}" class="text-white-50">Admin</a></li>
-                <li class="breadcrumb-item"><a href="{{ path('app_admin_products') }}" class="text-white-50">Produits</a></li>
-                <li class="breadcrumb-item active text-white">{{ title }}</li>
-            </ol>
-        </nav>
+{% block admin_body %}
+{{ form_start(form) }}
+{{ form_errors(form) }}
+<div class="admin__cols admin__cols--form">
+    <div>
+        <section class="panel">
+            <h2>Présentation</h2>
+            {{ form_row(form.name) }}
+            {{ form_row(form.description) }}
+            {{ form_row(form.category) }}
+        </section>
+        <section class="panel">
+            <h2>Image</h2>
+            {{ form_row(form.imageFile, {help: 'JPG, PNG, WebP ou GIF, 5 Mo au plus. Prioritaire sur l\'adresse ci-dessous.'}) }}
+            {{ form_row(form.image, {help: 'Adresse https d\'une image hébergée ailleurs.'}) }}
+        </section>
     </div>
-</div>
-
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="card">
-                <div class="card-body p-4">
-                    {{ form_start(form) }}
-                    
-                    <div class="mb-3">
-                        {{ form_row(form.name) }}
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_row(form.description) }}
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form_row(form.price) }}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            {{ form_row(form.oldPrice) }}
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            {{ form_row(form.stock) }}
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            {{ form_row(form.category) }}
-                        </div>
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_row(form.image) }}
-                        <small class="form-text text-muted">
-                            <i class="bi bi-info-circle"></i> Ou utilisez l'upload ci-dessous pour une image locale
-                        </small>
-                    </div>
-
-                    <div class="mb-3">
-                        {{ form_row(form.imageFile) }}
-                        {% if product is defined and product.imageName %}
-                            <div class="mt-2">
-                                <img src="{{ product.imageUrl }}" alt="Image actuelle" style="max-width: 200px; height: auto;" class="img-thumbnail">
-                                <p class="small text-muted mt-1">Image actuellement uploadée</p>
-                            </div>
-                        {% endif %}
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="form-check">
-                            {{ form_widget(form.isActive) }}
-                            {{ form_label(form.isActive) }}
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <div class="form-check">
-                            {{ form_widget(form.isFeatured) }}
-                            {{ form_label(form.isFeatured) }}
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between">
-                        <a href="{{ path('app_admin_products') }}" class="btn btn-outline-secondary">
-                            <i class="bi bi-arrow-left"></i> Retour
-                        </a>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="bi bi-save"></i> Enregistrer
-                        </button>
-                    </div>
-
-                    {{ form_end(form) }}
-                </div>
-            </div>
+    <div>
+        <section class="panel">
+            <h2>Prix et stock</h2>
+            {{ form_row(form.price) }}
+            {{ form_row(form.oldPrice, {label: 'Ancien prix', help: 'S\'il est plus élevé que le prix, la réduction s\'affiche d\'elle-même.'}) }}
+            {{ form_row(form.stock) }}
+        </section>
+        <section class="panel">
+            <h2>Visibilité</h2>
+            {{ form_row(form.isActive, {help: 'Décoché, le produit disparaît de la boutique sans être supprimé.'}) }}
+            {{ form_row(form.isFeatured, {help: 'Exposé dans la vitrine de la page d\'accueil.'}) }}
+        </section>
+        <div class="form-actions">
+            <button type="submit" class="btn">Enregistrer</button>
+            <a href="{{ path('app_admin_products') }}" class="btn btn--quiet">Annuler</a>
         </div>
     </div>
 </div>
+{{ form_end(form) }}
 {% endblock %}
-

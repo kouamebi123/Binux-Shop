@@ -1,0 +1,24 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+{% set section = account_section|default('home') %}
+<div class="wrap">
+    <header class="page-head">
+        <h1>{% block account_title %}Mon compte{% endblock %}</h1>
+        {% block account_intro %}{% endblock %}
+    </header>
+
+    <div class="account">
+        <nav class="account__nav" aria-label="Mon compte">
+            <a href="{{ path('app_account') }}" {{ section == 'home' ? 'aria-current="page"' }}>{{ icon('house') }} Vue d'ensemble</a>
+            <a href="{{ path('app_order_list') }}" {{ section == 'orders' ? 'aria-current="page"' }}>{{ icon('receipt') }} Commandes</a>
+            <a href="{{ path('app_account_addresses') }}" {{ section == 'addresses' ? 'aria-current="page"' }}>{{ icon('map-pin') }} Adresses</a>
+            <a href="{{ path('app_account_profile') }}" {{ section == 'profile' ? 'aria-current="page"' }}>{{ icon('user') }} Profil</a>
+            <a href="{{ path('app_account_password') }}" {{ section == 'password' ? 'aria-current="page"' }}>{{ icon('key-round') }} Mot de passe</a>
+        </nav>
+        <div>
+            {% block account_body %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

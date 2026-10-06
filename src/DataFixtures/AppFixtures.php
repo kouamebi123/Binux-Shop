@@ -23,6 +23,14 @@ class AppFixtures extends Fixture
 
     public function load(ObjectManager $manager): void
     {
+        // Jeu de données réservé au poste de développement. Aucun mot de passe n'est écrit dans le dépôt :
+        // il vient de la variable FIXTURES_PASSWORD, ou il est tiré au hasard et affiché une seule fois.
+        $password = $_SERVER['FIXTURES_PASSWORD'] ?? $_ENV['FIXTURES_PASSWORD'] ?? null;
+        if (!\is_string($password) || \strlen($password) < 10) {
+            $password = bin2hex(random_bytes(8));
+            echo sprintf("Mot de passe des comptes de développement (admin@binuxshop.com, client@binuxshop.com) : %s\n", $password);
+        }
+
         // Créer un utilisateur admin
         $admin = new User();
         $admin->setEmail('admin@binuxshop.com');
@@ -30,7 +38,7 @@ class AppFixtures extends Fixture
         $admin->setLastName('Binux Shop');
         $admin->setPhone('+33 1 23 45 67 89');
         $admin->setRoles(['ROLE_ADMIN']);
-        $admin->setPassword($this->passwordHasher->hashPassword($admin, 'admin123'));
+        $admin->setPassword($this->passwordHasher->hashPassword($admin, $password));
         $manager->persist($admin);
 
         // Créer un utilisateur client
@@ -39,7 +47,7 @@ class AppFixtures extends Fixture
         $user->setFirstName('Jean');
         $user->setLastName('Dupont');
         $user->setPhone('+33 6 12 34 56 78');
-        $user->setPassword($this->passwordHasher->hashPassword($user, 'client123'));
+        $user->setPassword($this->passwordHasher->hashPassword($user, $password));
         $manager->persist($user);
 
         // Créer les catégories

@@ -1,0 +1,5 @@
+Polices servies par le site, sous licence SIL Open Font License 1.1 (https://openfontlicense.org) :
+- Unbounded, © 2022 The Unbounded Project Authors (https://github.com/googlefonts/unbounded)
+- Hanken Grotesk, © 2021 The Hanken Grotesk Project Authors (https://github.com/marcologous/hanken-grotesk)
+
+Icônes (assets/icons) : Lucide, licence ISC, © Lucide Icons and Contributors (https://lucide.dev)

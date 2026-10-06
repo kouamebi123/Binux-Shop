@@ -2,257 +2,166 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}Binux Shop{% endblock %}</title>
-    
-    <!-- Bootstrap 5 CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Bootstrap Icons -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    
-    {% block stylesheets %}
-    <style>
-        :root {
-            --primary-color: #6366f1;
-            --secondary-color: #ec4899;
-            --dark-color: #1e293b;
-            --light-color: #f8fafc;
-        }
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            color: var(--dark-color);
-        }
-        
-        .navbar {
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            background: white !important;
-        }
-        
-        .navbar-brand {
-            font-weight: 700;
-            font-size: 1.5rem;
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
-            border: none;
-            border-radius: 8px;
-            padding: 10px 24px;
-            font-weight: 500;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
-            background: linear-gradient(135deg, #5558e3, #db3888);
-        }
-        
-        .card {
-            border: none;
-            border-radius: 16px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
-            transition: transform 0.3s, box-shadow 0.3s;
-            overflow: hidden;
-        }
-        
-        .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-        
-        .card-img-top {
-            height: 250px;
-            object-fit: cover;
-        }
-        
-        .badge {
-            border-radius: 6px;
-            padding: 6px 12px;
-            font-weight: 500;
-        }
-        
-        .footer {
-            background: var(--dark-color);
-            color: white;
-            margin-top: 80px;
-        }
-        
-        .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 100px 0;
-            border-radius: 0 0 50px 50px;
-        }
-        
-        .category-card {
-            border-radius: 20px;
-            overflow: hidden;
-            position: relative;
-            height: 200px;
-            background-size: cover;
-            background-position: center;
-        }
-        
-        .category-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, rgba(99, 102, 241, 0.8), rgba(236, 72, 153, 0.8));
-        }
-        
-        .category-card-content {
-            position: relative;
-            z-index: 1;
-            color: white;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-        }
-        
-        .product-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            z-index: 10;
-        }
-        
-        .alert {
-            border-radius: 12px;
-            border: none;
-        }
-        
-        .form-control, .form-select {
-            border-radius: 8px;
-            border: 2px solid #e2e8f0;
-            padding: 10px 15px;
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
-        }
-    </style>
-    {% endblock %}
+    <meta name="description" content="{% block description %}Binux Shop, la boutique en ligne de démonstration signée BinuxLabs : catalogue, panier, commande et paiement Stripe.{% endblock %}">
+    <meta name="theme-color" content="#0B1026">
+    <meta name="color-scheme" content="light">
+    <meta property="og:site_name" content="Binux Shop">
+    <meta property="og:title" content="{{ block('title') }}">
+    <meta property="og:description" content="{{ block('description') }}">
+    <meta property="og:type" content="website">
+    <link rel="icon" href="{{ asset('assets/favicon.svg') }}" type="image/svg+xml">
+    <link rel="preload" href="{{ asset('assets/fonts/hanken-grotesk-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="{{ asset('assets/fonts/unbounded-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
+    {% block stylesheets %}{% endblock %}
+    <script src="{{ asset('assets/js/app.js') }}" defer></script>
+    {% block javascripts %}{% endblock %}
 </head>
-<body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
-        <div class="container">
-            <a class="navbar-brand" href="{{ path('app_home') }}">
-                <i class="bi bi-shop"></i> Binux Shop
+<body class="{% block body_class %}{% endblock %}">
+{% block shell %}
+    <a class="skip-link" href="#contenu">Aller au contenu</a>
+
+    {% if shop.demo %}
+        <p class="demo-strip">
+            Boutique de démonstration&nbsp;: rien n'est vendu ni livré, le paiement est en mode test.
+            <a href="{{ path('app_about') }}">En savoir plus</a>
+        </p>
+    {% endif %}
+
+    <header class="site-header{% block header_class %}{% endblock %}" data-header>
+        <div class="wrap site-header__bar">
+            <a class="brand" href="{{ path('app_home') }}" aria-label="Binux Shop, accueil">
+                <span class="brand__a">Binux</span><span class="brand__b">Shop</span>
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <span class="navbar-toggler-icon"></span>
+
+            <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="menu" data-nav-toggle>
+                {{ icon('menu') }}<span class="sr-only">Menu</span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ path('app_home') }}">Accueil</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ path('app_product_index') }}">Produits</a>
-                    </li>
-                    
-                    {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-                        <li class="nav-item">
-                            <a class="nav-link position-relative" href="{{ path('app_cart_index') }}">
-                                <i class="bi bi-cart3"></i> Panier
-                            </a>
-                        </li>
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-person-circle"></i> {{ app.user.firstName }}
-                            </a>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                                <li><a class="dropdown-item" href="{{ path('app_account') }}"><i class="bi bi-person"></i> Mon compte</a></li>
-                                <li><a class="dropdown-item" href="{{ path('app_order_list') }}"><i class="bi bi-bag"></i> Mes commandes</a></li>
-                                {% if is_granted('ROLE_ADMIN') %}
-                                    <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{{ path('app_admin_dashboard') }}"><i class="bi bi-speedometer2"></i> Administration</a></li>
-                                {% endif %}
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item" href="{{ path('app_logout') }}"><i class="bi bi-box-arrow-right"></i> Déconnexion</a></li>
-                            </ul>
-                        </li>
-                    {% else %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{{ path('app_login') }}">Connexion</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="btn btn-primary btn-sm ms-2" href="{{ path('app_register') }}">Inscription</a>
-                        </li>
-                    {% endif %}
-                </ul>
+
+            <nav class="site-nav" id="menu" aria-label="Navigation principale" data-nav>
+                <a class="site-nav__link" href="{{ path('app_product_index') }}">Tous les articles</a>
+
+                <details class="menu" data-menu>
+                    <summary class="site-nav__link">Rayons {{ icon('chevron-down', 'icon--sm') }}</summary>
+                    <ul class="menu__panel">
+                        {% for row in shop.categories %}
+                            <li>
+                                <a href="{{ path('app_product_category', {slug: row.category.slug}) }}">
+                                    <span>{{ row.category.name }}</span>
+                                    <span class="menu__count">{{ row.count }}</span>
+                                </a>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </details>
+
+                <form class="search" action="{{ path('app_product_search') }}" method="get" role="search" data-search data-suggest-url="{{ path('app_product_suggest') }}">
+                    <label class="sr-only" for="recherche">Rechercher un article</label>
+                    {{ icon('search') }}
+                    <input id="recherche" type="search" name="q" placeholder="Rechercher un article" autocomplete="off" maxlength="80"
+                           value="{{ app.request.query.get('q')|default('') }}" aria-controls="suggestions" aria-autocomplete="list">
+                    <ul class="search__results" id="suggestions" role="listbox" hidden data-search-results></ul>
+                </form>
+            </nav>
+
+            <div class="site-header__actions">
+                {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                    <details class="menu menu--end" data-menu>
+                        <summary class="icon-link" aria-label="Mon compte, {{ app.user.firstName }}">
+                            {{ icon('user') }}<span class="icon-link__text">{{ app.user.firstName }}</span>
+                        </summary>
+                        <ul class="menu__panel">
+                            <li><a href="{{ path('app_account') }}">Mon compte</a></li>
+                            <li><a href="{{ path('app_order_list') }}">Mes commandes</a></li>
+                            {% if is_granted('ROLE_ADMIN') %}
+                                <li class="menu__sep"><a href="{{ path('app_admin_dashboard') }}">Administration</a></li>
+                            {% endif %}
+                            <li class="menu__sep"><a href="{{ logout_path('main') }}">Déconnexion</a></li>
+                        </ul>
+                    </details>
+                    <a class="icon-link icon-link--cart" href="{{ path('app_cart_index') }}" aria-label="Panier">
+                        {{ icon('shopping-bag') }}
+                        <span class="cart-count{% if shop.cartCount == 0 %} is-empty{% endif %}" data-cart-count>{{ shop.cartCount }}</span>
+                    </a>
+                {% else %}
+                    <a class="site-nav__link site-nav__link--plain" href="{{ path('app_login') }}">Connexion</a>
+                    <a class="btn btn--sm btn--header" href="{{ path('app_register') }}">Créer un compte</a>
+                {% endif %}
             </div>
         </div>
-    </nav>
+    </header>
 
-    <!-- Flash Messages -->
-    <div class="container mt-4">
-        {% for label, messages in app.flashes %}
-            {% for message in messages %}
-                <div class="alert alert-{{ label == 'error' ? 'danger' : label }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        {% endfor %}
-    </div>
+    <main id="contenu" tabindex="-1">
+        {{ include('_flashes.html.twig') }}
 
-    <!-- Main Content -->
-    {% block body %}{% endblock %}
+        {% block body %}{% endblock %}
+    </main>
 
-    <!-- Footer -->
-    <footer class="footer py-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4 mb-4">
-                    <h5 class="mb-3"><i class="bi bi-shop"></i> Binux Shop</h5>
-                    <p class="text-white-50">Votre boutique en ligne de confiance pour tous vos besoins.</p>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <h6 class="mb-3">Liens rapides</h6>
-                    <ul class="list-unstyled">
-                        <li><a href="{{ path('app_home') }}" class="text-white-50 text-decoration-none">Accueil</a></li>
-                        <li><a href="{{ path('app_product_index') }}" class="text-white-50 text-decoration-none">Produits</a></li>
-                        {% if is_granted('IS_AUTHENTICATED_FULLY') %}
-                            <li><a href="{{ path('app_account') }}" class="text-white-50 text-decoration-none">Mon compte</a></li>
-                        {% endif %}
-                    </ul>
-                </div>
-                <div class="col-md-4 mb-4">
-                    <h6 class="mb-3">Contact</h6>
-                    <ul class="list-unstyled text-white-50">
-                        <li><i class="bi bi-envelope"></i> contact@binuxshop.com</li>
-                        <li><i class="bi bi-phone"></i> +33 1 23 45 67 89</li>
-                        <li><i class="bi bi-geo-alt"></i> Paris, France</li>
-                    </ul>
-                </div>
+    <footer class="site-footer">
+        <div class="wrap site-footer__grid">
+            <div class="site-footer__brand">
+                <p class="brand brand--footer"><span class="brand__a">Binux</span><span class="brand__b">Shop</span></p>
+                <p>Une boutique en ligne complète, du rayon au paiement, conçue comme vitrine du savoir-faire de BinuxLabs.</p>
             </div>
-            <hr class="bg-white">
-            <div class="text-center text-white-50">
-                <p class="mb-0">&copy; {{ 'now'|date('Y') }} Binux Shop. Tous droits réservés.</p>
+            <nav aria-label="Boutique">
+                <h2>Boutique</h2>
+                <ul>
+                    <li><a href="{{ path('app_product_index') }}">Tous les articles</a></li>
+                    {% for row in shop.categories %}
+                        <li><a href="{{ path('app_product_category', {slug: row.category.slug}) }}">{{ row.category.name }}</a></li>
+                    {% endfor %}
+                </ul>
+            </nav>
+            <nav aria-label="Votre compte">
+                <h2>Votre compte</h2>
+                <ul>
+                    {% if is_granted('IS_AUTHENTICATED_FULLY') %}
+                        <li><a href="{{ path('app_account') }}">Mon compte</a></li>
+                        <li><a href="{{ path('app_order_list') }}">Mes commandes</a></li>
+                        <li><a href="{{ path('app_cart_index') }}">Panier</a></li>
+                    {% else %}
+                        <li><a href="{{ path('app_login') }}">Connexion</a></li>
+                        <li><a href="{{ path('app_register') }}">Créer un compte</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+            <nav aria-label="À propos">
+                <h2>À propos</h2>
+                <ul>
+                    <li><a href="{{ path('app_about') }}">Cette boutique</a></li>
+                    <li><a href="{{ path('app_about') }}#donnees">Vos données</a></li>
+                    <li><a href="{{ shop.brandUrl }}/contact" rel="noopener">Contacter BinuxLabs</a></li>
+                </ul>
+            </nav>
+        </div>
+        <div class="wrap site-footer__legal">
+            <div>
+                <p>&copy; {{ 'now'|date('Y') }} Binux Shop</p>
+                <p class="signature">Signé <a href="{{ shop.brandUrl }}" rel="noopener">BinuxLabs</a></p>
             </div>
         </div>
     </footer>
 
-    <!-- Bootstrap 5 JS Bundle -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    {% block javascripts %}{% endblock %}
+    <div class="cart-toast" role="status" aria-live="polite" hidden data-cart-toast>
+        <div class="cart-toast__head">
+            {{ icon('circle-check') }}<p data-cart-toast-title>Ajouté au panier</p>
+            <button type="button" class="flash__close" aria-label="Fermer" data-cart-toast-close>{{ icon('x', 'icon--sm') }}</button>
+        </div>
+        <div class="cart-toast__item">
+            <span class="thumb" data-cart-toast-thumb></span>
+            <div>
+                <p class="cart-toast__name" data-cart-toast-name></p>
+                <p class="cart-toast__price" data-cart-toast-price></p>
+            </div>
+        </div>
+        <p class="cart-toast__total">Total du panier <strong data-cart-toast-total></strong></p>
+        <div class="cart-toast__actions">
+            <a class="btn btn--sm" href="{{ path('app_cart_index') }}">Voir le panier</a>
+            <button type="button" class="btn btn--sm btn--quiet" data-cart-toast-close>Continuer mes achats</button>
+        </div>
+    </div>
+{% endblock %}
 </body>
 </html>

@@ -7,7 +7,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
+use App\Util\Money;
 use Symfony\Component\HttpFoundation\File\File;
+use Symfony\Component\Validator\Constraints as Assert;
 use Vich\UploaderBundle\Mapping\Annotation as Vich;
 
 #[ORM\Entity(repositoryClass: ProductRepository::class)]
@@ -20,27 +22,45 @@ class Product
     private ?int $id = null;
 
     #[ORM\Column(length: 255)]
+    #[Assert\NotBlank(message: 'Donnez un nom au produit.')]
+    #[Assert\Length(min: 2, max: 150)]
     private ?string $name = null;
 
     #[ORM\Column(length: 255, unique: true)]
     private ?string $slug = null;
 
     #[ORM\Column(type: Types::TEXT, nullable: true)]
+    #[Assert\Length(max: 5000)]
     private ?string $description = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2)]
+    #[Assert\NotBlank(message: 'Indiquez un prix.')]
+    #[Assert\Positive(message: 'Le prix doit être supérieur à zéro.')]
+    #[Assert\LessThan(value: 100000, message: 'Le prix doit rester inférieur à 100 000 €.')]
     private ?string $price = null;
 
     #[ORM\Column(type: Types::DECIMAL, precision: 10, scale: 2, nullable: true)]
+    #[Assert\Positive(message: 'L\'ancien prix doit être supérieur à zéro.')]
+    #[Assert\LessThan(value: 100000)]
     private ?string $oldPrice = null;
 
     #[ORM\Column]
+    #[Assert\NotNull(message: 'Indiquez le stock disponible.')]
+    #[Assert\Range(min: 0, max: 100000, notInRangeMessage: 'Le stock doit être compris entre {{ min }} et {{ max }}.')]
     private ?int $stock = null;
 
     #[ORM\Column(length: 255, nullable: true)]
+    #[Assert\Length(max: 255)]
+    #[Assert\Url(protocols: ['https'], message: 'Indiquez une adresse complète commençant par https://')]
     private ?string $image = null;
 
     #[Vich\UploadableField(mapping: 'product_images', fileNameProperty: 'imageName')]
+    #[Assert\File(
+        maxSize: '5M',
+        extensions: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        extensionsMessage: 'Formats acceptés : JPG, PNG, WebP ou GIF.',
+        maxSizeMessage: 'L\'image dépasse 5 Mo.',
+    )]
     private ?File $imageFile = null;
 
     #[ORM\Column(length: 255, nullable: true)]
@@ -57,6 +77,7 @@ class Product
 
     #[ORM\ManyToOne(inversedBy: 'products')]
     #[ORM\JoinColumn(nullable: false)]
+    #[Assert\NotNull(message: 'Choisissez une catégorie.')]
     private ?Category $category = null;
 
     #[ORM\Column]
@@ -241,7 +262,7 @@ class Product
 
     public function hasDiscount(): bool
     {
-        return $this->oldPrice !== null && $this->oldPrice > $this->price;
+        return null !== $this->oldPrice && Money::toCents($this->oldPrice) > Money::toCents($this->price);
     }
 
     public function getDiscountPercentage(): int
@@ -250,7 +271,19 @@ class Product
             return 0;
         }
 
-        return (int) round((($this->oldPrice - $this->price) / $this->oldPrice) * 100);
+        $old = Money::toCents($this->oldPrice);
+
+        return (int) round(($old - Money::toCents($this->price)) * 100 / $old);
+    }
+
+    public function getPriceCents(): int
+    {
+        return Money::toCents($this->price);
+    }
+
+    public function isLowStock(): bool
+    {
+        return $this->stock > 0 && $this->stock <= 5;
     }
 
     public function isInStock(): bool

@@ -1,0 +1,18 @@
+{% extends 'base.html.twig' %}
+
+{% block body %}
+<div class="auth">
+    <div class="auth__night" aria-hidden="true">
+        <p class="enseigne">
+            <span class="enseigne__tube enseigne__tube--blue">Binux</span>
+            <span class="enseigne__tube enseigne__tube--orange">Shop</span>
+        </p>
+        <p>{% block auth_aside %}Votre panier, vos adresses et le suivi de vos commandes vous attendent derrière cette porte.{% endblock %}</p>
+    </div>
+    <div class="auth__form">
+        <div class="auth__box">
+            {% block auth_body %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}

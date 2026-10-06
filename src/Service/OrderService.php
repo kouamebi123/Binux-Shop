@@ -2,117 +2,215 @@
 
 namespace App\Service;
 
+use App\Entity\Address;
 use App\Entity\Cart;
 use App\Entity\Order;
 use App\Entity\OrderItem;
 use App\Entity\User;
-use App\Entity\Address;
+use App\Exception\ShopException;
 use App\Repository\OrderRepository;
+use App\Util\Money;
 use Doctrine\ORM\EntityManagerInterface;
 
 class OrderService
 {
-    private EntityManagerInterface $entityManager;
-    private OrderRepository $orderRepository;
-    private CartService $cartService;
+    /** Délai au-delà duquel une commande jamais payée est annulée et son stock libéré. */
+    public const UNPAID_LIFETIME = 'PT2H';
+
+    /** Enchaînements de statuts autorisés depuis l'administration. */
+    private const TRANSITIONS = [
+        Order::STATUS_PENDING => [Order::STATUS_PROCESSING, Order::STATUS_CANCELLED],
+        Order::STATUS_PROCESSING => [Order::STATUS_SHIPPED, Order::STATUS_CANCELLED],
+        Order::STATUS_SHIPPED => [Order::STATUS_DELIVERED, Order::STATUS_CANCELLED],
+        Order::STATUS_DELIVERED => [],
+        Order::STATUS_CANCELLED => [],
+    ];
 
     public function __construct(
-        EntityManagerInterface $entityManager,
-        OrderRepository $orderRepository,
-        CartService $cartService
+        private readonly EntityManagerInterface $entityManager,
+        private readonly OrderRepository $orderRepository,
+        private readonly CartService $cartService,
     ) {
-        $this->entityManager = $entityManager;
-        $this->orderRepository = $orderRepository;
-        $this->cartService = $cartService;
     }
 
     public function createOrderFromCart(Cart $cart, Address $address, ?string $notes = null): Order
     {
         if ($cart->getItems()->isEmpty()) {
-            throw new \Exception('Votre panier est vide.');
+            throw new ShopException('Votre panier est vide.');
         }
 
-        // Vérifier le stock de tous les produits
+        // Les commandes abandonnées sans paiement rendent d'abord leur stock.
+        $this->expireUnpaidOrders();
+
+        // Premier contrôle, pour un message clair sans ouvrir de transaction.
         foreach ($cart->getItems() as $cartItem) {
-            if ($cartItem->getQuantity() > $cartItem->getProduct()->getStock()) {
-                throw new \Exception(
-                    sprintf(
-                        'Stock insuffisant pour le produit "%s". Stock disponible: %d',
-                        $cartItem->getProduct()->getName(),
-                        $cartItem->getProduct()->getStock()
-                    )
-                );
+            $product = $cartItem->getProduct();
+            $this->entityManager->refresh($product);
+
+            if (!$product->isIsActive() || $cartItem->getQuantity() > $product->getStock()) {
+                throw new ShopException(sprintf('« %s » n\'est plus disponible dans la quantité demandée.', $product->getName()));
             }
         }
 
-        // Créer la commande
-        $order = new Order();
-        $order->setUser($cart->getUser());
-        $order->setShippingAddress($address->getFullAddress());
-        $order->setTotal((string)$cart->getTotal());
-        $order->setNotes($notes);
+        return $this->entityManager->wrapInTransaction(function () use ($cart, $address, $notes): Order {
+            $order = new Order();
+            $order->setUser($cart->getUser());
+            $order->setShippingAddress($address->getFullAddress());
+            $order->setNotes($notes);
 
-        // Créer les items de commande et réduire le stock
-        foreach ($cart->getItems() as $cartItem) {
-            $orderItem = new OrderItem();
-            $orderItem->setOrderRef($order);
-            $orderItem->setProduct($cartItem->getProduct());
-            $orderItem->setProductName($cartItem->getProduct()->getName());
-            $orderItem->setQuantity($cartItem->getQuantity());
-            $orderItem->setPrice($cartItem->getPrice());
+            $totalCents = 0;
 
-            $order->addItem($orderItem);
+            foreach ($cart->getItems() as $cartItem) {
+                $product = $cartItem->getProduct();
+                $quantity = (int) $cartItem->getQuantity();
 
-            // Réduire le stock
-            $product = $cartItem->getProduct();
-            $product->setStock($product->getStock() - $cartItem->getQuantity());
-            $product->setUpdatedAt(new \DateTimeImmutable());
+                if ($quantity < 1 || $quantity > CartService::MAX_QUANTITY) {
+                    throw new ShopException(sprintf('La quantité demandée pour « %s » n\'est pas valide.', $product->getName()));
+                }
 
-            $this->entityManager->persist($orderItem);
+                // Réservation atomique : la ligne n'est modifiée que si le stock suffit encore,
+                // ce qui empêche deux commandes simultanées de vendre le même exemplaire.
+                $reserved = $this->entityManager->getConnection()->executeStatement(
+                    'UPDATE product SET stock = stock - :quantity, updated_at = CURRENT_TIMESTAMP
+                     WHERE id = :id AND is_active = true AND stock >= :quantity',
+                    ['quantity' => $quantity, 'id' => $product->getId()]
+                );
+
+                if (1 !== $reserved) {
+                    throw new ShopException(sprintf('« %s » n\'est plus disponible dans la quantité demandée.', $product->getName()));
+                }
+
+                $this->entityManager->refresh($product);
+
+                $orderItem = new OrderItem();
+                $orderItem->setProduct($product);
+                $orderItem->setProductName($product->getName());
+                $orderItem->setQuantity($quantity);
+                // Prix du catalogue au moment de la commande, jamais celui mémorisé dans le panier.
+                $orderItem->setPrice($product->getPrice());
+                $order->addItem($orderItem);
+                $this->entityManager->persist($orderItem);
+
+                $totalCents += $orderItem->getTotalCents();
+            }
+
+            $order->setTotal(Money::toDecimal($totalCents));
+            $this->entityManager->persist($order);
+
+            $this->cartService->clearCart($cart);
+            $this->entityManager->flush();
+
+            return $order;
+        });
+    }
+
+    /**
+     * @return string[] statuts vers lesquels la commande peut passer
+     */
+    public function allowedTransitions(Order $order): array
+    {
+        $allowed = self::TRANSITIONS[$order->getStatus()] ?? [];
+
+        // Rien ne s'expédie ni ne se prépare tant que le paiement n'est pas encaissé.
+        if (!$order->isPaid()) {
+            $allowed = array_values(array_intersect($allowed, [Order::STATUS_CANCELLED]));
         }
 
-        $this->entityManager->persist($order);
-        
-        // Vider le panier
-        $this->cartService->clearCart($cart);
-
-        $this->entityManager->flush();
-
-        return $order;
+        return $allowed;
     }
 
     public function updateOrderStatus(Order $order, string $status): void
     {
-        $availableStatuses = array_keys(Order::getAvailableStatuses());
-        
-        if (!in_array($status, $availableStatuses)) {
-            throw new \Exception('Statut invalide.');
+        if (!\array_key_exists($status, Order::getAvailableStatuses())) {
+            throw new ShopException('Statut invalide.');
+        }
+
+        if ($status === $order->getStatus()) {
+            return;
+        }
+
+        if (!\in_array($status, $this->allowedTransitions($order), true)) {
+            throw new ShopException(
+                $order->isPaid()
+                    ? sprintf('Une commande « %s » ne peut pas passer à « %s ».', $order->getStatusLabel(), Order::getAvailableStatuses()[$status])
+                    : 'Cette commande doit être payée avant d\'être traitée.'
+            );
+        }
+
+        if (Order::STATUS_CANCELLED === $status) {
+            $this->cancelOrder($order);
+
+            return;
         }
 
         $order->setStatus($status);
         $this->entityManager->flush();
     }
 
+    /**
+     * @return Order[]
+     */
     public function getUserOrders(User $user): array
     {
         return $this->orderRepository->findByUser($user);
     }
 
+    public function findUserOrder(User $user, string $orderNumber): ?Order
+    {
+        return $this->orderRepository->findOneBy(['user' => $user, 'orderNumber' => $orderNumber]);
+    }
+
+    /**
+     * Annule la commande et remet ses articles en stock.
+     */
     public function cancelOrder(Order $order): void
     {
-        if ($order->getStatus() === Order::STATUS_DELIVERED || $order->getStatus() === Order::STATUS_CANCELLED) {
-            throw new \Exception('Cette commande ne peut pas être annulée.');
+        if (\in_array($order->getStatus(), [Order::STATUS_DELIVERED, Order::STATUS_CANCELLED], true)) {
+            throw new ShopException('Cette commande ne peut plus être annulée.');
         }
 
-        // Remettre les produits en stock
+        $this->entityManager->wrapInTransaction(function () use ($order): void {
+            foreach ($order->getItems() as $orderItem) {
+                $this->entityManager->getConnection()->executeStatement(
+                    'UPDATE product SET stock = stock + :quantity, updated_at = CURRENT_TIMESTAMP WHERE id = :id',
+                    ['quantity' => (int) $orderItem->getQuantity(), 'id' => $orderItem->getProduct()->getId()]
+                );
+                $this->entityManager->refresh($orderItem->getProduct());
+            }
+
+            $order->setStatus(Order::STATUS_CANCELLED);
+            $this->entityManager->flush();
+        });
+    }
+
+    /**
+     * Annule les commandes restées sans paiement au-delà du délai et libère leur stock.
+     */
+    public function expireUnpaidOrders(?\DateTimeImmutable $now = null): int
+    {
+        $limit = ($now ?? new \DateTimeImmutable())->sub(new \DateInterval(self::UNPAID_LIFETIME));
+        $expired = 0;
+
+        foreach ($this->orderRepository->findUnpaidBefore($limit) as $order) {
+            $this->cancelOrder($order);
+            ++$expired;
+        }
+
+        return $expired;
+    }
+
+    /**
+     * Une commande annulée faute de paiement vient finalement d'être réglée :
+     * ses articles sont repris sur le stock, sans jamais le rendre négatif.
+     */
+    public function reviveCancelledOrder(Order $order): void
+    {
         foreach ($order->getItems() as $orderItem) {
-            $product = $orderItem->getProduct();
-            $product->setStock($product->getStock() + $orderItem->getQuantity());
-            $product->setUpdatedAt(new \DateTimeImmutable());
+            $this->entityManager->getConnection()->executeStatement(
+                'UPDATE product SET stock = GREATEST(stock - :quantity, 0), updated_at = CURRENT_TIMESTAMP WHERE id = :id',
+                ['quantity' => (int) $orderItem->getQuantity(), 'id' => $orderItem->getProduct()->getId()]
+            );
+            $this->entityManager->refresh($orderItem->getProduct());
         }
-
-        $order->setStatus(Order::STATUS_CANCELLED);
-        $this->entityManager->flush();
     }
 }
-

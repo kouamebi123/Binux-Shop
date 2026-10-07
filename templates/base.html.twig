@@ -12,10 +12,12 @@
     <meta property="og:description" content="{{ block('description') }}">
     <meta property="og:type" content="website">
     <link rel="icon" href="{{ asset('assets/favicon.svg') }}" type="image/svg+xml">
-    <link rel="preload" href="{{ asset('assets/fonts/hanken-grotesk-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="{{ asset('assets/fonts/unbounded-latin-wght-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
+    {# Même adresse que dans la feuille de style (sans numéro de version), sinon les polices seraient téléchargées deux fois. #}
+    <link rel="preload" href="/assets/fonts/hanken-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="/assets/fonts/unbounded-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="{{ asset('assets/css/app.css') }}">
     {% block stylesheets %}{% endblock %}
+    <script src="{{ asset('assets/js/boot.js') }}"></script>
     <script src="{{ asset('assets/js/app.js') }}" defer></script>
     {% block javascripts %}{% endblock %}
 </head>
@@ -42,6 +44,9 @@
 
             <nav class="site-nav" id="menu" aria-label="Navigation principale" data-nav>
                 <a class="site-nav__link" href="{{ path('app_product_index') }}">Tous les articles</a>
+                {% if not is_granted('IS_AUTHENTICATED_FULLY') %}
+                    <a class="site-nav__link site-nav__link--mobile" href="{{ path('app_login') }}">Connexion</a>
+                {% endif %}
 
                 <details class="menu" data-menu>
                     <summary class="site-nav__link">Rayons {{ icon('chevron-down', 'icon--sm') }}</summary>
@@ -163,5 +168,14 @@
         </div>
     </div>
 {% endblock %}
+
+<dialog class="dialog" aria-labelledby="dialog-titre" aria-describedby="dialog-texte" data-dialog>
+    <h2 id="dialog-titre" data-dialog-title></h2>
+    <p id="dialog-texte" data-dialog-text></p>
+    <div class="dialog__actions">
+        <button type="button" class="btn btn--sm btn--quiet" data-dialog-cancel>Annuler</button>
+        <button type="button" class="btn btn--sm" data-dialog-confirm>Confirmer</button>
+    </div>
+</dialog>
 </body>
 </html>

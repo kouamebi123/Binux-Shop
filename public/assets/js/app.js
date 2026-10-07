@@ -6,51 +6,95 @@
     const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    /* ----- Images : si un visuel ne se charge pas, l'initiale de l'article reste visible ----- */
-    const markBroken = (img) => img.classList.add('is-broken');
-
-    $$('img[data-img]').forEach((img) => {
-        if (img.complete && img.naturalWidth === 0) {
-            markBroken(img);
+    /**
+     * Fait disparaître un élément en douceur : pose la classe « is-closing » (animation de sortie en CSS),
+     * puis exécute « done » à la fin de l'animation. Un délai de garde couvre le cas sans animation.
+     */
+    const leave = (element, done) => {
+        if (element.classList.contains('is-closing')) {
+            return;
         }
-    });
 
-    document.addEventListener('error', (event) => {
-        if (event.target instanceof HTMLImageElement && event.target.matches('[data-img]')) {
-            markBroken(event.target);
-        }
-    }, true);
+        let finished = false;
+        const finish = () => {
+            if (finished) {
+                return;
+            }
+            finished = true;
+            // Rouvert entre-temps : la fermeture est abandonnée.
+            if (!element.classList.contains('is-closing')) {
+                return;
+            }
+            element.classList.remove('is-closing');
+            done();
+        };
 
-    /* ----- Messages : fermeture ----- */
+        element.classList.add('is-closing');
+        element.addEventListener('animationend', (event) => {
+            if (event.target === element || element.contains(event.target)) {
+                finish();
+            }
+        }, { once: true });
+        setTimeout(finish, 320);
+    };
+
+    /* ----- Messages : fermeture, le message se replie au lieu de disparaître d'un coup ----- */
     document.addEventListener('click', (event) => {
-        const close = event.target.closest('[data-flash-close]');
-        if (close) {
-            close.closest('[data-flash]')?.remove();
+        const flash = event.target.closest('[data-flash-close]')?.closest('[data-flash]');
+        if (!flash || flash.dataset.leaving) {
+            return;
         }
+
+        flash.dataset.leaving = '1';
+        const style = getComputedStyle(flash);
+        const animation = flash.animate([
+            { opacity: 1, height: `${flash.offsetHeight}px`, paddingTop: style.paddingTop, paddingBottom: style.paddingBottom, marginBottom: '0px' },
+            { opacity: 0, height: '0px', paddingTop: '0px', paddingBottom: '0px', marginBottom: '-0.6rem' },
+        ], { duration: 280, easing: 'cubic-bezier(0.2, 0.7, 0.2, 1)', fill: 'forwards' });
+
+        flash.classList.add('is-leaving');
+        animation.finished.catch(() => {}).then(() => flash.remove());
     });
 
-    /* ----- Menus déroulants (<details>) : un seul ouvert, fermeture au clic extérieur et à Échap ----- */
+    /* ----- Menus déroulants (<details>) : un seul ouvert, ouverture et fermeture progressives ----- */
     const menus = $$('[data-menu]');
+
+    const closeMenu = (menu, refocus = false) => {
+        if (!menu.open) {
+            return;
+        }
+        leave(menu, () => {
+            menu.open = false;
+            if (refocus) {
+                $('summary', menu)?.focus();
+            }
+        });
+    };
+
+    menus.forEach((menu) => {
+        $('summary', menu)?.addEventListener('click', (event) => {
+            if (menu.open) {
+                // Fermeture : on laisse l'animation de sortie se jouer avant de replier.
+                event.preventDefault();
+                closeMenu(menu);
+            } else {
+                menus.forEach((other) => other !== menu && closeMenu(other));
+            }
+        });
+    });
 
     document.addEventListener('click', (event) => {
         menus.forEach((menu) => {
-            if (menu.open && !menu.contains(event.target)) {
-                menu.open = false;
+            if (!menu.contains(event.target)) {
+                closeMenu(menu);
             }
         });
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key !== 'Escape') {
-            return;
+        if (event.key === 'Escape') {
+            menus.forEach((menu) => closeMenu(menu, true));
         }
-
-        menus.forEach((menu) => {
-            if (menu.open) {
-                menu.open = false;
-                $('summary', menu)?.focus();
-            }
-        });
     });
 
     /* ----- Menu sur petit écran ----- */
@@ -59,8 +103,14 @@
 
     if (navToggle && nav) {
         navToggle.addEventListener('click', () => {
-            const open = nav.classList.toggle('is-open');
-            navToggle.setAttribute('aria-expanded', String(open));
+            if (nav.classList.contains('is-open')) {
+                navToggle.setAttribute('aria-expanded', 'false');
+                leave(nav, () => nav.classList.remove('is-open'));
+            } else {
+                nav.classList.remove('is-closing');
+                nav.classList.add('is-open');
+                navToggle.setAttribute('aria-expanded', 'true');
+            }
         });
     }
 
@@ -204,14 +254,56 @@
         }
     });
 
-    /* ----- Confirmation avant une action définitive ----- */
-    document.addEventListener('submit', (event) => {
-        const message = event.target.dataset?.confirm;
-        if (message && !window.confirm(message)) {
+    /* ----- Confirmation avant une action définitive : une fenêtre de la boutique, qui s'ouvre en douceur ----- */
+    const dialog = $('[data-dialog]');
+
+    if (dialog && typeof dialog.showModal === 'function') {
+        let pendingForm = null;
+
+        const closeDialog = (confirmed) => {
+            const form = pendingForm;
+            leave(dialog, () => {
+                dialog.close();
+                pendingForm = null;
+                if (confirmed && form) {
+                    form.dataset.confirmed = '1';
+                    form.submit();
+                }
+            });
+        };
+
+        document.addEventListener('submit', (event) => {
+            const form = event.target;
+            if (!(form instanceof HTMLFormElement) || !form.dataset.confirm || form.dataset.confirmed) {
+                return;
+            }
+
             event.preventDefault();
             event.stopImmediatePropagation();
-        }
-    }, true);
+
+            pendingForm = form;
+            $('[data-dialog-title]', dialog).textContent = form.dataset.confirm;
+            $('[data-dialog-text]', dialog).textContent = form.dataset.confirmText || 'Cette action est définitive.';
+            $('[data-dialog-confirm]', dialog).textContent = form.dataset.confirmAction || 'Confirmer';
+            $('[data-dialog-cancel]', dialog).textContent = form.dataset.confirmCancel || 'Annuler';
+            dialog.showModal();
+        }, true);
+
+        dialog.addEventListener('click', (event) => {
+            if (event.target.closest('[data-dialog-confirm]')) {
+                closeDialog(true);
+            } else if (event.target.closest('[data-dialog-cancel]') || event.target === dialog) {
+                // Clic sur « Annuler » ou sur le voile autour de la fenêtre.
+                closeDialog(false);
+            }
+        });
+
+        // Touche Échap : même fermeture progressive.
+        dialog.addEventListener('cancel', (event) => {
+            event.preventDefault();
+            closeDialog(false);
+        });
+    }
 
     /* ----- Ajout au panier sans quitter la page ----- */
     const toast = $('[data-cart-toast]');
@@ -248,14 +340,22 @@
             fillThumb($('[data-cart-toast-thumb]', toast), data.item);
         }
 
+        toast.classList.remove('is-closing');
         toast.hidden = false;
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => { toast.hidden = true; }, 6000);
+        toastTimer = setTimeout(hideToast, 6000);
+    };
+
+    const hideToast = () => {
+        if (toast && !toast.hidden) {
+            leave(toast, () => { toast.hidden = true; });
+        }
     };
 
     toast?.addEventListener('click', (event) => {
         if (event.target.closest('[data-cart-toast-close]')) {
-            toast.hidden = true;
+            clearTimeout(toastTimer);
+            hideToast();
         }
     });
 
@@ -323,10 +423,15 @@
         let active = -1;
 
         const close = () => {
-            list.hidden = true;
-            list.replaceChildren();
             input.setAttribute('aria-expanded', 'false');
             active = -1;
+            if (list.hidden) {
+                return;
+            }
+            leave(list, () => {
+                list.hidden = true;
+                list.replaceChildren();
+            });
         };
 
         const setActive = (index) => {
@@ -371,6 +476,7 @@
                 list.append(li);
             });
 
+            list.classList.remove('is-closing');
             list.hidden = false;
             input.setAttribute('aria-expanded', 'true');
             active = -1;

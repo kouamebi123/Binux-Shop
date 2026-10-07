@@ -32,7 +32,7 @@
 
             {% if order.awaitingPayment %}
                 {{ include('order/_pay.html.twig') }}
-                <form method="post" action="{{ path('app_order_cancel', {id: order.id}) }}" data-confirm="Annuler cette commande ?">
+                <form method="post" action="{{ path('app_order_cancel', {id: order.id}) }}" data-confirm="Annuler cette commande ?" data-confirm-text="Ses articles seront remis en vente. Rien n'a été débité." data-confirm-action="Annuler la commande" data-confirm-cancel="Garder ma commande">
                     <input type="hidden" name="_token" value="{{ csrf_token('order_cancel_' ~ order.id) }}">
                     <p class="fine"><button type="submit" class="link-button">Annuler cette commande</button></p>
                 </form>

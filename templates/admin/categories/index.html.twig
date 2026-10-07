@@ -33,7 +33,7 @@
                     <td>
                         <div class="cell-actions">
                             <a href="{{ path('app_admin_category_edit', {id: category.id}) }}">Modifier</a>
-                            <form method="post" action="{{ path('app_admin_category_delete', {id: category.id}) }}" data-confirm="Supprimer la catégorie « {{ category.name }} » ?">
+                            <form method="post" action="{{ path('app_admin_category_delete', {id: category.id}) }}" data-confirm="Supprimer la catégorie « {{ category.name }} » ?" data-confirm-text="Une catégorie qui contient encore des produits ne peut pas être supprimée." data-confirm-action="Supprimer">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete_category_' ~ category.id) }}">
                                 <button type="submit" class="link-button">Supprimer</button>
                             </form>

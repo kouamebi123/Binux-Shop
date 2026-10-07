@@ -17,7 +17,7 @@
                 <div class="row-card__end">
                     {% if address.isDefault %}<span class="tag tag--info">Par défaut</span>{% endif %}
                     <a href="{{ path('app_account_address_edit', {id: address.id}) }}">Modifier</a>
-                    <form method="post" action="{{ path('app_account_address_delete', {id: address.id}) }}" data-confirm="Supprimer cette adresse ?">
+                    <form method="post" action="{{ path('app_account_address_delete', {id: address.id}) }}" data-confirm="Supprimer cette adresse ?" data-confirm-text="Vos commandes déjà passées ne sont pas modifiées." data-confirm-action="Supprimer">
                         <input type="hidden" name="_token" value="{{ csrf_token('delete_address_' ~ address.id) }}">
                         <button type="submit" class="link-button">Supprimer</button>
                     </form>

@@ -60,7 +60,7 @@
             </dl>
             <a href="{{ path('app_order_create') }}" class="btn btn--block">Commander</a>
             <p class="fine">{{ icon('lock', 'icon--sm') }}Le paiement se fait à l'étape suivante, sur la page sécurisée de Stripe.</p>
-            <form method="post" action="{{ path('app_cart_clear') }}" data-confirm="Vider entièrement le panier ?">
+            <form method="post" action="{{ path('app_cart_clear') }}" data-confirm="Vider entièrement le panier ?" data-confirm-text="Tous les articles en seront retirés." data-confirm-action="Vider le panier">
                 <input type="hidden" name="_token" value="{{ csrf_token('cart_clear') }}">
                 <p class="fine"><button type="submit" class="link-button">Vider le panier</button></p>
             </form>

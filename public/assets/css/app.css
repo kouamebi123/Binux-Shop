@@ -67,6 +67,11 @@
     --shadow-card: 0 1px 2px rgba(16, 20, 43, 0.05), 0 12px 32px -18px rgba(16, 20, 43, 0.28);
     --shadow-pop: 0 2px 6px rgba(16, 20, 43, 0.08), 0 24px 48px -16px rgba(16, 20, 43, 0.32);
 
+    /* Mouvement : rien n'apparaît ni ne disparaît d'un coup. */
+    --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+    --shift: 0.5rem;
+    --shrink: 0.985;
+
     --wrap: 1240px;
     --gutter: clamp(1.1rem, 4vw, 2.5rem);
     --header-h: 4.5rem;
@@ -885,6 +890,7 @@ input[type="file"].form-control {
 }
 
 .brand {
+    transition: color 0.25s;
     display: inline-flex;
     gap: 0.35em;
     font-family: var(--font-display);
@@ -928,6 +934,11 @@ input[type="file"].form-control {
 
 .site-nav__link:hover {
     background: rgba(16, 20, 43, 0.06);
+}
+
+/* Lien réservé au menu des petits écrans, où « Connexion » ne tient pas dans la barre. */
+.site-nav__link--mobile {
+    display: none;
 }
 
 .site-header__actions {
@@ -1346,7 +1357,6 @@ input[type="file"].form-control {
 
 .display__frame img {
     filter: brightness(0.86) saturate(0.95);
-    transition: filter 0.35s, transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .display__link:hover .display__frame img,
@@ -1396,41 +1406,47 @@ input[type="file"].form-control {
     display: none;
 }
 
-/* Allumage de l'enseigne : une seule fois, à l'arrivée sur la page. */
-@media (prefers-reduced-motion: no-preference) {
-    .enseigne__tube {
-        animation: allumage 1.5s steps(1, end) both;
-    }
-
-    .enseigne__tube--orange {
-        animation-delay: 0.35s;
-    }
-
-    .vitrine__lead,
-    .vitrine__actions {
-        animation: apparition 0.7s 0.9s ease-out both;
-    }
-
-    .display {
-        animation: projecteur 0.8s ease-out both;
-        animation-delay: calc(1.1s + var(--i, 0) * 90ms);
-    }
-
-    .display--1 { --i: 1; }
-    .display--2 { --i: 2; }
-    .display--3 { --i: 3; }
-    .display--4 { --i: 4; }
-    .display--5 { --i: 5; }
-    .display--6 { --i: 6; }
-    .display--7 { --i: 7; }
+/* Allumage de l'enseigne, une seule fois à l'arrivée : le néon monte en intensité, sans clignoter. */
+.enseigne__tube {
+    animation: allumage 1.6s ease-in-out both;
 }
 
+.enseigne__tube--orange {
+    animation-delay: 0.3s;
+}
+
+.vitrine__lead,
+.vitrine__actions {
+    animation: apparition 0.8s 0.7s var(--ease) both;
+}
+
+.display {
+    animation: projecteur 0.9s ease-out both;
+    animation-delay: calc(0.9s + var(--i, 0) * 90ms);
+}
+
+.display--1 { --i: 1; }
+.display--2 { --i: 2; }
+.display--3 { --i: 3; }
+.display--4 { --i: 4; }
+.display--5 { --i: 5; }
+.display--6 { --i: 6; }
+.display--7 { --i: 7; }
+
 @keyframes allumage {
-    0%, 12%, 22%, 30% {
-        opacity: 0.14;
+    0% {
+        opacity: 0;
     }
 
-    8%, 18%, 26%, 38%, 100% {
+    45% {
+        opacity: 0.55;
+    }
+
+    62% {
+        opacity: 0.42;
+    }
+
+    100% {
         opacity: 1;
     }
 }
@@ -1438,7 +1454,7 @@ input[type="file"].form-control {
 @keyframes apparition {
     from {
         opacity: 0;
-        transform: translateY(0.6rem);
+        transform: translateY(var(--shift));
     }
 }
 
@@ -1469,13 +1485,15 @@ input[type="file"].form-control {
     border-radius: var(--r-card);
 }
 
-.rayons__preview img {
+.rayons__preview img,
+.js .rayons__preview img.is-loaded {
     opacity: 0;
     transform: scale(1.04);
-    transition: opacity 0.45s, transform 0.9s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition: opacity 0.45s, transform 0.9s var(--ease);
 }
 
-.rayons__preview img.is-active {
+.rayons__preview img.is-active,
+.js .rayons__preview img.is-loaded.is-active {
     opacity: 1;
     transform: none;
 }
@@ -1591,10 +1609,6 @@ input[type="file"].form-control {
 .card-product__media {
     aspect-ratio: 4 / 5;
     border-radius: var(--r-card);
-}
-
-.card-product__media img {
-    transition: transform 0.7s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
 
 .card-product:hover .card-product__media img {
@@ -2554,18 +2568,12 @@ a.row-card:hover {
     border: 1px solid var(--line);
     border-radius: var(--r-card);
     box-shadow: var(--shadow-pop);
-    animation: toast-in 0.28s cubic-bezier(0.2, 0.7, 0.2, 1);
+    transform-origin: top right;
+    animation: surface-in 0.28s var(--ease);
 }
 
-.cart-toast[hidden] {
-    display: none;
-}
-
-@keyframes toast-in {
-    from {
-        opacity: 0;
-        transform: translateY(-0.6rem) scale(0.98);
-    }
+.cart-toast.is-closing {
+    animation: surface-out 0.2s ease-in forwards;
 }
 
 .cart-toast__head {
@@ -2639,6 +2647,167 @@ a.row-card:hover {
     flex: 1 1 auto;
 }
 
+/* ---------- Apparitions et disparitions en douceur ---------- */
+
+@keyframes surface-in {
+    from {
+        opacity: 0;
+        transform: translateY(calc(var(--shift) * -1)) scale(var(--shrink));
+    }
+}
+
+@keyframes surface-out {
+    to {
+        opacity: 0;
+        transform: translateY(calc(var(--shift) * -1)) scale(var(--shrink));
+    }
+}
+
+@keyframes fade-in {
+    from {
+        opacity: 0;
+    }
+}
+
+@keyframes fade-out {
+    to {
+        opacity: 0;
+    }
+}
+
+/* Chaque page arrive en fondu. */
+main,
+.error-page__box {
+    animation: fade-in 0.4s ease-out;
+}
+
+/* Menus déroulants */
+.menu[open] > .menu__panel {
+    transform-origin: top left;
+    animation: surface-in 0.2s var(--ease);
+}
+
+.menu--end[open] > .menu__panel {
+    transform-origin: top right;
+}
+
+.menu.is-closing > .menu__panel {
+    animation: surface-out 0.16s ease-in forwards;
+}
+
+.menu > summary .icon--sm {
+    transition: transform 0.2s var(--ease);
+}
+
+.menu[open]:not(.is-closing) > summary .icon--sm {
+    transform: rotate(180deg);
+}
+
+/* Suggestions de recherche */
+.search__results {
+    transform-origin: top;
+    animation: surface-in 0.2s var(--ease);
+}
+
+.search__results.is-closing {
+    animation: surface-out 0.16s ease-in forwards;
+}
+
+.search__results li {
+    animation: fade-in 0.2s ease-out;
+}
+
+/* Messages en haut de page */
+.flash {
+    animation: surface-in 0.4s var(--ease) both;
+}
+
+.flash:nth-child(2) {
+    animation-delay: 0.08s;
+}
+
+.flash:nth-child(n + 3) {
+    animation-delay: 0.16s;
+}
+
+/* Visuels : ils se révèlent en fondu une fois chargés, au lieu de surgir. */
+img[data-img] {
+    transition: opacity 0.5s ease-out, transform 0.7s var(--ease), filter 0.35s;
+}
+
+.js img[data-img]:not(.is-loaded) {
+    opacity: 0;
+}
+
+/* Détail repliable (tableau des chiffres) */
+details.chart__table[open] > .table-wrap {
+    animation: surface-in 0.25s var(--ease);
+}
+
+/* Fenêtre de confirmation */
+.dialog {
+    width: min(27rem, calc(100vw - 2 * var(--gutter)));
+    padding: 1.5rem;
+    border: 1px solid var(--line);
+    border-radius: var(--r-card);
+    background: var(--surface);
+    color: var(--ink);
+    box-shadow: var(--shadow-pop);
+}
+
+.dialog[open] {
+    animation: dialog-in 0.26s var(--ease);
+}
+
+.dialog::backdrop {
+    background: rgba(11, 16, 38, 0.55);
+    -webkit-backdrop-filter: blur(3px);
+    backdrop-filter: blur(3px);
+    animation: fade-in 0.26s ease-out;
+}
+
+.dialog.is-closing {
+    animation: dialog-out 0.18s ease-in forwards;
+}
+
+.dialog.is-closing::backdrop {
+    animation: fade-out 0.18s ease-in forwards;
+}
+
+@keyframes dialog-in {
+    from {
+        opacity: 0;
+        transform: translateY(var(--shift)) scale(var(--shrink));
+    }
+}
+
+@keyframes dialog-out {
+    to {
+        opacity: 0;
+        transform: translateY(var(--shift)) scale(var(--shrink));
+    }
+}
+
+.dialog h2 {
+    font-family: var(--font-text);
+    font-weight: 700;
+    font-size: 1.15rem;
+    letter-spacing: 0;
+}
+
+.dialog p {
+    margin-top: 0.5rem;
+    color: var(--ink-soft);
+}
+
+.dialog__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1.5rem;
+}
+
 /* ---------- Transitions entre pages ---------- */
 
 @view-transition {
@@ -2690,6 +2859,12 @@ a.row-card:hover {
 
     .site-nav.is-open {
         display: flex;
+        transform-origin: top;
+        animation: surface-in 0.24s var(--ease);
+    }
+
+    .site-nav.is-closing {
+        animation: surface-out 0.18s ease-in forwards;
     }
 
     .site-nav .search {
@@ -2723,6 +2898,10 @@ a.row-card:hover {
     .icon-link__text,
     .site-nav__link--plain {
         display: none;
+    }
+
+    .site-nav__link--mobile {
+        display: inline-flex;
     }
 
     .rayons__grid,
@@ -2838,21 +3017,37 @@ a.row-card:hover {
     }
 }
 
+/* Animations réduites demandées par le système : les fondus restent (rien n'apparaît d'un coup),
+   les déplacements, zooms et défilements animés sont retirés. */
 @media (prefers-reduced-motion: reduce) {
+    :root {
+        --shift: 0rem;
+        --shrink: 1;
+    }
+
     html {
         scroll-behavior: auto;
     }
 
-    *,
-    *::before,
-    *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+    .card-product:hover .card-product__media img,
+    .display__link:hover .display__frame img,
+    .display__link:focus-visible .display__frame img,
+    .rayons__preview img,
+    .btn:active,
+    .btn-round:active {
+        transform: none;
     }
 
-    @view-transition {
-        navigation: none;
+    .rayon {
+        transition: none;
+    }
+
+    .cart-count.is-bumped {
+        animation: none;
+    }
+
+    ::view-transition-group(article) {
+        animation: none;
     }
 }
 

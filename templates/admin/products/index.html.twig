@@ -41,7 +41,7 @@
                     <td>
                         <div class="cell-actions">
                             <a href="{{ path('app_admin_product_edit', {id: product.id}) }}">Modifier</a>
-                            <form method="post" action="{{ path('app_admin_product_delete', {id: product.id}) }}" data-confirm="Supprimer « {{ product.name }} » ?">
+                            <form method="post" action="{{ path('app_admin_product_delete', {id: product.id}) }}" data-confirm="Supprimer « {{ product.name }} » ?" data-confirm-text="S'il figure dans des commandes, il sera retiré de la vente plutôt que supprimé." data-confirm-action="Supprimer">
                                 <input type="hidden" name="_token" value="{{ csrf_token('delete_product_' ~ product.id) }}">
                                 <button type="submit" class="link-button">Supprimer</button>
                             </form>
